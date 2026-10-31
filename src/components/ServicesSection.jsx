@@ -7,17 +7,19 @@ function ServicesSection({ onSelectService }) {
         <div className="section-header reveal">
           <div className="section-badge">
             <span className="badge-dot" />
-            <span>africafuture Core IT & API Offerings</span>
+            <span>AfricaFuture Complete Growth & Tech Suite</span>
           </div>
           <h2 className="section-title">
-            Websites, Mobile Apps &{' '}
-            <span className="gradient-text">WhatsApp / Gmail APIs</span> Built
-            for Scale
+            Digital Marketing,{' '}
+            <span className="gradient-text">
+              Websites & Software Applications
+            </span>{' '}
+            Built for Growth
           </h2>
           <p className="section-subtitle">
-            Everything your business needs in one IT partner—from custom
-            full-stack websites and mobile apps to plug-and-play WhatsApp
-            Business & Gmail API integrations.
+            From our affordable R350/month retail digital marketing plans across
+            TikTok, Instagram, Facebook & WhatsApp to custom websites and
+            business software applications.
           </p>
         </div>
 
@@ -49,6 +51,7 @@ function ServicesSection({ onSelectService }) {
               <div className="service-footer">
                 <span className="service-metric">{service.metric}</span>
                 <button
+                  type="button"
                   className="service-link"
                   onClick={() => onSelectService(service)}
                 >
@@ -65,4 +68,3 @@ function ServicesSection({ onSelectService }) {
 }
 
 export default ServicesSection;
-

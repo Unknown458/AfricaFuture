@@ -1,120 +1,187 @@
 export const MARQUEE_ITEMS = [
-  'africafuture • IT & Digital Engineering',
-  'Custom Website & Mobile App Development',
-  'WhatsApp Business Cloud API Integration',
-  'Gmail & Google Workspace API Automation',
-  'Application Development & Management (ADM)',
-  'Cloud Modernization & DevSecOps',
-  '24/7 Application Maintenance & Support',
+  'Grow Your Retail Business with AfricaFuture!',
+  'More Visibility • More Customers • More Sales',
+  '1. Digital Marketing — Starting from Just R350/month',
+  '2. Custom Website & E-Commerce Development',
+  '3. Software Applications, Mobile Apps & WhatsApp API',
+  'TikTok • Instagram • Facebook • WhatsApp • Your Own Website',
+  'Call Us Today: 0799962663',
 ];
 
-export const ADM_TABS = [
+export const MAIN_THREE_PILLARS = [
   {
-    id: 'dev',
-    tabTitle: 'Application & Platform Development',
-    heading: 'Application & Platform Development',
+    id: 'digital-marketing',
+    number: '01',
+    badge: 'Starting from R350 / month',
+    tabTitle: '1. Digital Marketing',
+    heading: 'Digital Marketing for Retail & Local Businesses',
     description:
-      'Achieve quicker and more robust development, better integrations, and rapid turnaround by applying product development practices such as Agile development and increased automation.',
+      'Let AfricaFuture take care of your digital marketing while you focus on running your business. We help retailers promote their products, reach more potential customers, and attract shoppers to their physical stores across TikTok, Instagram, Facebook, and WhatsApp—starting from just R350 per month!',
+    highlights: [
+      'TikTok, Instagram, Facebook & WhatsApp product promotion',
+      'Drive local enquiries and physical in-store customer visits',
+      'Affordable monthly subscription starting from just R350/month',
+    ],
   },
   {
-    id: 'mod',
-    tabTitle: 'Application Modernization',
-    heading: 'Application Modernization',
+    id: 'website-development',
+    number: '02',
+    badge: 'Professional Online Presence',
+    tabTitle: '2. Website Development',
+    heading: 'Custom Website & Online Store Development',
     description:
-      'Improve IT agility and enhance customer experience (CX) by transforming legacy monolithic systems into scalable, cloud-native architectures powered by GenAI and modern APIs.',
+      'Give your business a professional online presence that works 24/7. We design and build fast, mobile-friendly retail websites, online product catalogs, e-commerce stores, and corporate web portals tailored to convert visitors into paying customers.',
+    highlights: [
+      'Custom business websites, online catalogs & e-commerce stores',
+      'Mobile-responsive design optimized for local Google search (SEO)',
+      'Direct WhatsApp chat, enquiry forms & product showcase integration',
+    ],
   },
   {
-    id: 'maint',
-    tabTitle: 'Application Maintenance & Support',
-    heading: 'Application Maintenance & Support',
+    id: 'software-application',
+    number: '03',
+    badge: 'Web, Mobile & APIs',
+    tabTitle: '3. Software Application',
+    heading: 'Custom Software Applications, Mobile Apps & APIs',
     description:
-      'Transition to standardized maintenance and support methodologies and improve CX by adding support self-service, through automation, and using integrated DevSecOps teams.',
-  },
-  {
-    id: 'rat',
-    tabTitle: 'Application Portfolio Rationalization',
-    heading: 'Application Portfolio Rationalization',
-    description:
-      'Eliminate redundant tools, reduce cloud and licensing costs, and unify your communication and business workflows into one streamlined digital ecosystem.',
+      'Scale and automate your operations with custom-built software applications, iOS & Android mobile apps, and official WhatsApp Business Cloud API & Gmail workflow integrations engineered for reliability and growth.',
+    highlights: [
+      'Custom Web & Mobile Applications (iOS & Android)',
+      'Official WhatsApp Business Cloud API & automated customer chatbots',
+      'Gmail API automation, billing/inventory software & 24/7 IT support',
+    ],
   },
 ];
+
+export const PROMO_PLATFORMS = [
+  {
+    id: 'tiktok',
+    name: 'TikTok',
+    tagline: 'Viral Video Reach',
+    description: 'Engaging promotional videos to reach new audiences.',
+    accent: '#00f2fe',
+    bgGradient: 'linear-gradient(135deg, #111827 0%, #1f2937 100%)',
+  },
+  {
+    id: 'instagram',
+    name: 'Instagram',
+    tagline: 'Visual Product Showcase',
+    description: 'Showcase your products and attract potential buyers.',
+    accent: '#e1306c',
+    bgGradient: 'linear-gradient(135deg, #833ab4 0%, #fd1d1d 50%, #fcb045 100%)',
+  },
+  {
+    id: 'facebook',
+    name: 'Facebook',
+    tagline: 'Local Community Reach',
+    description: 'Build your audience and connect with local customers.',
+    accent: '#1877f2',
+    bgGradient: 'linear-gradient(135deg, #1877f2 0%, #0d5bd9 100%)',
+  },
+  {
+    id: 'whatsapp',
+    name: 'WhatsApp',
+    tagline: 'Direct Customer Chat',
+    description: 'Promote your products and engage directly with customers.',
+    accent: '#25d366',
+    bgGradient: 'linear-gradient(135deg, #25d366 0%, #128c7e 100%)',
+  },
+  {
+    id: 'website',
+    name: 'Your Own Website',
+    tagline: '24/7 Digital Storefront',
+    description: 'Give your business a professional online presence.',
+    accent: '#ff5510',
+    bgGradient: 'linear-gradient(135deg, #ff5510 0%, #ff2a6d 100%)',
+  },
+];
+
+export const WHY_CHOOSE_POINTS = [
+  'Affordable monthly marketing plans — Starting from Just R350!',
+  'Increased online visibility for your business.',
+  'Reach more potential local customers.',
+  'Promote your products across multiple platforms.',
+  'Drive more enquiries and encourage in-store visits.',
+];
+
+export const ADM_TABS = MAIN_THREE_PILLARS;
 
 export const CORE_SERVICES = [
   {
     id: '01',
-    icon: '🌐',
-    title: 'Custom Website & Web App Development',
+    icon: '📢',
+    title: '1. Retail Digital Marketing (From R350/mo)',
     description:
-      'We design and engineer blazing-fast corporate websites, e-commerce platforms, SaaS dashboards, and custom web portals with modern animations.',
+      'No expensive marketing agencies. No complicated packages. We promote your retail products across TikTok, Instagram, Facebook, and WhatsApp to bring customers to your store.',
     features: [
-      'React, Next.js, Node.js & Full-Stack Web Apps',
-      'Responsive UI/UX with interactive Webflow-grade motion',
-      'SEO-optimized, secure, and cloud-hosted architecture',
+      'TikTok & Instagram engaging promotional product reels & posts',
+      'Facebook local customer targeting & WhatsApp direct campaigns',
+      'Affordable monthly subscription starting from just R350/month',
     ],
-    metric: 'Sub-Second Load Time',
+    metric: 'Starting from R350/mo',
   },
   {
     id: '02',
-    icon: '📱',
-    title: 'Mobile App Development (iOS & Android)',
+    icon: '🌐',
+    title: '2. Website & Online Store Development',
     description:
-      'End-to-end native and cross-platform mobile applications designed for seamless customer engagement, real-time notifications, and offline reliability.',
+      'Give your business a professional online presence. We design and engineer blazing-fast retail websites, e-commerce platforms, and interactive product catalogs.',
     features: [
-      'Flutter & React Native iOS/Android Apps',
-      'Real-time push notifications & payment gateways',
-      'App Store & Play Store deployment & maintenance',
+      'Custom business websites, e-commerce & product showcase portals',
+      'Mobile-first responsive UI/UX with fast load speeds',
+      'SEO-optimized to rank for local shoppers in South Africa',
     ],
-    metric: '4.9★ App Store Standard',
+    metric: 'Professional Presence',
   },
   {
     id: '03',
-    icon: '💬',
-    title: 'WhatsApp Business API & Chatbot Solutions',
+    icon: '💻',
+    title: '3. Custom Software & Mobile Applications',
     description:
-      'Official WhatsApp Cloud API integration for automated customer support, OTP verification, order alerts, interactive catalogs, and AI chatbots.',
+      'End-to-end custom software applications and native/cross-platform iOS & Android mobile apps built to streamline your business operations and engage customers.',
     features: [
-      'Automated WhatsApp notifications, OTPs & invoices',
-      '24/7 AI & rule-based customer support chatbots',
-      'Multi-agent shared inbox & CRM webhook sync',
+      'Custom web software, POS/retail dashboards & business portals',
+      'Flutter & React Native iOS/Android mobile applications',
+      'Real-time push notifications, payment gateways & cloud sync',
+    ],
+    metric: 'Web & Mobile Apps',
+  },
+  {
+    id: '04',
+    icon: '💬',
+    title: 'WhatsApp Business API & Customer Automation',
+    description:
+      'Promote your products and engage directly with customers using Official WhatsApp Cloud API integrations, automated catalogs, order alerts, and 24/7 chatbots.',
+    features: [
+      'Automated WhatsApp product broadcasts, OTPs & invoices',
+      '24/7 AI & rule-based customer enquiry chatbots',
+      'Direct click-to-WhatsApp store lead generation',
     ],
     metric: '98% Message Open Rate',
   },
   {
-    id: '04',
-    icon: '✉️',
-    title: 'Gmail API & Email Workflow Automation',
-    description:
-      'Connect your websites and enterprise apps directly with Gmail API and Google Workspace for automated transactional emails, inbox parsing, and lead sync.',
-    features: [
-      'OAuth2 secure Gmail API sending & inbox reading',
-      'Automated invoice, ticket & lead email triggers',
-      'Custom email templates, tracking & webhook alerts',
-    ],
-    metric: '99.9% Inbox Deliverability',
-  },
-  {
     id: '05',
-    icon: '⚙️',
-    title: 'Custom REST / GraphQL API & Webhooks',
+    icon: '✉️',
+    title: 'Gmail API & Business Workflow Automation',
     description:
-      'Bridge all your software systems together. We build secure, documented APIs and connect third-party gateways (Stripe, Razorpay, ERP, CRM, SMS).',
+      'Connect your website and retail systems directly with Gmail API and Google Workspace for automated customer quotes, invoices, and enquiry tracking.',
     features: [
-      'High-throughput REST & GraphQL API engineering',
-      'Payment gateway, SMS, ERP & CRM integrations',
-      'Real-time webhook queues & rate-limit protection',
+      'Automated invoice, order confirmation & lead email triggers',
+      'Custom branded business email setup & workflow integration',
+      'CRM, ERP, payment gateway & SMS webhook integrations',
     ],
-    metric: '10M+ API Calls / Day',
+    metric: '99.9% Deliverability',
   },
   {
     id: '06',
     icon: '🛡️',
-    title: 'DevSecOps, Cloud Hosting & 24/7 Support',
+    title: 'Cloud Hosting, Maintenance & 24/7 IT Support',
     description:
-      'Complete Application Management & Maintenance—automated CI/CD pipelines, cloud server management, security audits, and round-the-clock support.',
+      'Complete website and application management—secure cloud hosting, regular product updates, backups, security monitoring, and dedicated local support.',
     features: [
-      'AWS, Azure, GCP & VPS cloud infrastructure',
-      'Automated backups, SSL & DDoS security guardrails',
-      'Dedicated maintenance & support SLA teams',
+      'Fast, secure website & application cloud hosting',
+      'Continuous content updates, SSL security & daily backups',
+      'Dedicated Johannesburg support team ready to assist',
     ],
     metric: '99.99% Uptime SLA',
   },
@@ -124,66 +191,67 @@ export const CLIENT_STORIES = [
   {
     id: 'story-1',
     image:
-      'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=900&q=80',
-    eyebrow: 'Client Success',
+      'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&w=900&q=80',
+    eyebrow: '1. Digital Marketing Success',
     title:
-      'An Insurance Claims Management company optimizes Claims and Administration',
+      'Local Retail Store Doubles Foot Traffic with TikTok, Instagram & WhatsApp Campaigns',
     summary:
-      'Modernized claims processing workflows with automated web portals, real-time WhatsApp & Gmail API customer notifications, and cloud-native rules engines.',
+      'By launching consistent promotional product videos on TikTok, Instagram showcases, and direct WhatsApp Broadcast catalogues starting on our R350/month plan, the retailer increased weekly in-store customer visits and enquiries.',
   },
   {
     id: 'story-2',
     image:
-      'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=900&q=80',
-    eyebrow: 'Client Success',
+      'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?auto=format&fit=crop&w=900&q=80',
+    eyebrow: '2. Website Development Success',
     title:
-      'Empirix achieves 50% reduction in the time to get products to market',
+      'Multi-Branch Retailer Launches Online Product Catalog & Direct WhatsApp Ordering Website',
     summary:
-      'Applied agile product engineering, automated CI/CD testing pipelines, and reusable UI component libraries to cut release cycles in half.',
+      'We built a fast, mobile-first retail website integrated with instant WhatsApp product enquiries and Google local search optimization, giving the business a 24/7 professional online storefront.',
   },
   {
     id: 'story-3',
     image:
-      'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=900&q=80',
-    eyebrow: 'Client Success',
+      'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=900&q=80',
+    eyebrow: '3. Software Application Success',
     title:
-      'Accelerating modernization for a global logistics provider by scaling their DevSecOps organization',
+      'Automated Order & Customer Notification Software with WhatsApp & Gmail APIs',
     summary:
-      'Re-architected legacy tracking portals into cloud-native microservices with live WhatsApp shipment alerts and automated Gmail invoicing.',
+      'Engineered a custom business software application that syncs customer orders, dispatches live WhatsApp status updates, and sends automated Gmail invoices—saving hours of manual admin every day.',
   },
 ];
 
 export const ABOUT_STATS = [
   {
     id: 'stat-1',
-    value: '200+',
-    target: 200,
-    suffix: '+',
-    label: 'We deliver great work always',
-    iconType: 'folder',
+    value: 'R350',
+    target: 350,
+    prefix: 'R',
+    suffix: '/mo',
+    label: 'Affordable monthly digital marketing plans',
+    iconType: 'trophy',
   },
   {
     id: 'stat-2',
-    value: '10+',
-    target: 10,
+    value: '200+',
+    target: 200,
     suffix: '+',
-    label: 'Experience you can count on',
-    iconType: 'briefcase',
+    label: 'Retailers & businesses promoted online',
+    iconType: 'folder',
   },
   {
     id: 'stat-3',
-    value: '20+',
-    target: 20,
-    suffix: '+',
-    label: 'Award-Winning Work, Trusted Results',
-    iconType: 'trophy',
+    value: '5+',
+    target: 5,
+    suffix: ' Platforms',
+    label: 'TikTok, Instagram, Facebook, WhatsApp & Web',
+    iconType: 'briefcase',
   },
   {
     id: 'stat-4',
     value: '5K+',
     target: 5,
     suffix: 'K+',
-    label: 'We have happy Clients worldwide',
+    label: 'More enquiries, visibility & store visits',
     iconType: 'users',
   },
 ];
@@ -196,7 +264,5 @@ export const COMPANY_INFO = {
   address: '21 Olga Krisch Street, Ridgeway 2091, Johannesburg, South Africa',
   phone: '0799962663',
   email: 'info@africafuture.co.za',
+  startingPrice: 'R350',
 };
-
-
-

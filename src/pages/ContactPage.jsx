@@ -40,29 +40,35 @@ function ContactPage({ currentPath, onNavigate }) {
     <div className="app-wrapper contact-page-wrapper">
       <Navbar currentPath={currentPath} onNavigate={onNavigate} />
 
-      {/* Top Contact Us Header Section (Matching Ritovex Contact Screenshot) */}
       <section className="contact-hero-section">
         <div className="container">
           <div className="contact-hero-inner reveal visible">
+            <div className="section-badge" style={{ marginBottom: '14px' }}>
+              <span className="badge-dot" />
+              <span>Starting from R350 / Month • Digital Marketing, Websites & Software</span>
+            </div>
             <h1 className="contact-main-title">Contact Us</h1>
             <p className="contact-main-subtitle">
-              Partner with <strong>{COMPANY_INFO.legalName}</strong> to build, modernize,
-              and scale your custom websites, mobile apps, and official WhatsApp & Gmail
-              API solutions. Reach out to our Johannesburg engineering & consultancy team today.
+              Partner with <strong>{COMPANY_INFO.legalName}</strong> for{' '}
+              <strong>1. Digital Marketing</strong> (TikTok, Instagram, Facebook &
+              WhatsApp starting from R350/month),{' '}
+              <strong>2. Website Development</strong>, and{' '}
+              <strong>3. Software Applications</strong>. Reach out to our
+              Johannesburg team today!
             </p>
           </div>
         </div>
       </section>
 
-      {/* Middle Soft-Gray Band: Left Portrait + Right "Send Your Message" Form */}
+      {/* Middle Soft-Gray Band: Left Tech Image + Right "Send Your Message" Form */}
       <section className="contact-form-band">
         <div className="container">
           <div className="contact-form-grid reveal visible">
-            {/* Left Rounded Portrait Image */}
+            {/* Left Rounded IT Tech Image */}
             <div className="contact-portrait-box">
               <img
-                src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?auto=format&fit=crop&w=1000&q=85"
-                alt="Africa future consultancy investment pty ltd support consultant"
+                src="https://images.unsplash.com/photo-1556761175-4b46a572b786?auto=format&fit=crop&w=1000&q=85"
+                alt="AfricaFuture consulting, IT technology & software solutions workspace"
                 className="contact-portrait-img"
               />
             </div>
@@ -141,12 +147,12 @@ function ContactPage({ currentPath, onNavigate }) {
                     </div>
 
                     <div className="contact-field">
-                      <label htmlFor="budget">Budget*</label>
+                      <label htmlFor="budget">Service / Plan*</label>
                       <input
                         id="budget"
                         name="budget"
                         type="text"
-                        placeholder="Type Your Budget"
+                        placeholder="e.g. Digital Marketing (R350/mo), Website, App"
                         value={formData.budget}
                         onChange={handleChange}
                         required
@@ -160,7 +166,7 @@ function ContactPage({ currentPath, onNavigate }) {
                       id="message"
                       name="message"
                       rows="5"
-                      placeholder="Write your message"
+                      placeholder="Tell us about your retail store, website, or software requirements"
                       value={formData.message}
                       onChange={handleChange}
                       required
@@ -260,7 +266,7 @@ function ContactPage({ currentPath, onNavigate }) {
                   {COMPANY_INFO.email}
                 </a>
                 <br />
-                <span>24/7 Web, Mobile & API Support Desk</span>
+                <span>24/7 Digital Marketing, Web & App Support</span>
               </p>
             </div>
           </div>
@@ -273,4 +279,3 @@ function ContactPage({ currentPath, onNavigate }) {
 }
 
 export default ContactPage;
-

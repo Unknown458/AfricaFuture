@@ -12,10 +12,10 @@ function Navbar({ currentPath = '/', onNavigate }) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleLinkClick = (e, path, hash = '') => {
+  const handleLinkClick = (e, path) => {
     if (!onNavigate) return;
     e.preventDefault();
-    onNavigate(path, hash);
+    onNavigate(path);
   };
 
   return (
@@ -33,30 +33,30 @@ function Navbar({ currentPath = '/', onNavigate }) {
 
       <nav className="nav-links">
         <a
-          href="/#about"
-          className={`nav-link ${currentPath === '/' ? '' : ''}`}
-          onClick={(e) => handleLinkClick(e, '/', '#about')}
+          href="/about"
+          className={`nav-link ${currentPath === '/about' ? 'active-route' : ''}`}
+          onClick={(e) => handleLinkClick(e, '/about')}
         >
           About Us
         </a>
         <a
-          href="/#adm"
-          className="nav-link"
-          onClick={(e) => handleLinkClick(e, '/', '#adm')}
+          href="/services"
+          className={`nav-link ${currentPath === '/services' ? 'active-route' : ''}`}
+          onClick={(e) => handleLinkClick(e, '/services')}
         >
           Services
         </a>
         <a
-          href="/#solutions"
-          className="nav-link"
-          onClick={(e) => handleLinkClick(e, '/', '#solutions')}
+          href="/digital-marketing"
+          className={`nav-link ${currentPath === '/digital-marketing' ? 'active-route' : ''}`}
+          onClick={(e) => handleLinkClick(e, '/digital-marketing')}
         >
-          Web, App & APIs
+          Digital Marketing
         </a>
         <a
-          href="/#client-success"
-          className="nav-link"
-          onClick={(e) => handleLinkClick(e, '/', '#client-success')}
+          href="/client-success"
+          className={`nav-link ${currentPath === '/client-success' ? 'active-route' : ''}`}
+          onClick={(e) => handleLinkClick(e, '/client-success')}
         >
           Client Success
         </a>

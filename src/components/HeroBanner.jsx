@@ -1,8 +1,11 @@
-function HeroBanner({ onNavigate }) {
-  const handleConsultClick = (e) => {
-    if (!onNavigate) return;
+function HeroBanner({ onNavigate, onOpenGetStarted }) {
+  const handleGetStarted = (e) => {
     e.preventDefault();
-    onNavigate('/contact');
+    if (onOpenGetStarted) {
+      onOpenGetStarted();
+    } else if (onNavigate) {
+      onNavigate('/contact');
+    }
   };
 
   return (
@@ -13,26 +16,28 @@ function HeroBanner({ onNavigate }) {
 
       <div className="container">
         <div className="hero-clean-content reveal visible">
-          <div className="hero-eyebrow">Services</div>
+          <div className="hero-eyebrow">
+            Digital Marketing • Website Development • Software Application
+          </div>
 
           <h1 className="hero-main-heading">
-            Application Development
+            Grow Your Retail Business
             <br />
-            and Management
+            with <span style={{ color: '#ff6a2b' }}>AfricaFuture</span>
           </h1>
 
           <p className="hero-subtitle-lead">
-            Improve IT agility, enhance CX through application modernization.
+            More Visibility. More Customers. More Sales.
           </p>
 
           <div>
-            <a
-              href="/contact"
+            <button
+              type="button"
               className="btn-orange"
-              onClick={handleConsultClick}
+              onClick={handleGetStarted}
             >
-              <span>Consult our Experts</span>
-            </a>
+              <span>GET STARTED TODAY</span>
+            </button>
           </div>
         </div>
       </div>

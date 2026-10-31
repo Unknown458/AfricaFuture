@@ -1,19 +1,31 @@
 import { useState } from 'react';
-import { ADM_TABS } from '../data/landingData';
+import { MAIN_THREE_PILLARS } from '../data/landingData';
 
-function AdmTabsSection() {
-  const [activeAdmTab, setActiveAdmTab] = useState(0);
-  const currentTab = ADM_TABS[activeAdmTab];
+function AdmTabsSection({ onOpenGetStarted }) {
+  const [activeTab, setActiveTab] = useState(0);
+  const currentTab = MAIN_THREE_PILLARS[activeTab];
 
   return (
     <section id="adm" className="adm-tabs-section">
       <div className="container">
+        <div className="section-header reveal" style={{ marginBottom: '28px' }}>
+          <div className="section-badge">
+            <span className="badge-dot" />
+            <span>Our Main 3 Core Pillars</span>
+          </div>
+          <h2 className="section-title">
+            1. Digital Marketing • 2. Website Development •{' '}
+            <span className="gradient-text">3. Software Application</span>
+          </h2>
+        </div>
+
         <div className="adm-top-bar reveal">
-          {ADM_TABS.map((tab, index) => (
+          {MAIN_THREE_PILLARS.map((tab, index) => (
             <button
               key={tab.id}
-              className={`adm-tab-link ${activeAdmTab === index ? 'active' : ''}`}
-              onClick={() => setActiveAdmTab(index)}
+              type="button"
+              className={`adm-tab-link ${activeTab === index ? 'active' : ''}`}
+              onClick={() => setActiveTab(index)}
             >
               {tab.tabTitle}
             </button>
@@ -21,11 +33,29 @@ function AdmTabsSection() {
         </div>
 
         <div className="adm-tab-content-single reveal">
-          <h2 className="adm-tab-heading">{currentTab.heading}</h2>
+          <div className="pillar-badge-inline">{currentTab.badge}</div>
+          <h3 className="adm-tab-heading">{currentTab.heading}</h3>
           <p className="adm-tab-desc">{currentTab.description}</p>
-          <a href="#solutions" className="btn-orange">
-            <span>Learn more about our service offerings</span>
-          </a>
+
+          {currentTab.highlights && (
+            <ul className="pillar-highlights-list">
+              {currentTab.highlights.map((item, idx) => (
+                <li key={idx}>
+                  <span className="feature-check">✓</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <button
+            type="button"
+            className="btn-orange"
+            onClick={onOpenGetStarted}
+          >
+            <span>GET STARTED TODAY</span>
+            <span>↗</span>
+          </button>
         </div>
       </div>
     </section>
@@ -33,4 +63,3 @@ function AdmTabsSection() {
 }
 
 export default AdmTabsSection;
-

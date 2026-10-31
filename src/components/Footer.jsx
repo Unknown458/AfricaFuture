@@ -1,10 +1,12 @@
 import { COMPANY_INFO } from '../data/landingData';
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 function Footer({ onNavigate }) {
-  const handleNav = (e, path, hash = '') => {
+  const handleNav = (e, path) => {
     if (!onNavigate) return;
     e.preventDefault();
-    onNavigate(path, hash);
+    onNavigate(path);
   };
 
   return (
@@ -47,64 +49,70 @@ function Footer({ onNavigate }) {
           </div>
 
           <div className="footer-col">
-            <h4>ADM Services</h4>
+            <h4>Main 3 Solutions</h4>
             <ul>
               <li>
-                <a href="/#adm" onClick={(e) => handleNav(e, '/', '#adm')}>
-                  Application & Platform Dev
+                <a
+                  href="/digital-marketing"
+                  onClick={(e) => handleNav(e, '/digital-marketing')}
+                >
+                  1. Digital Marketing (From R350/mo)
                 </a>
               </li>
               <li>
-                <a href="/#adm" onClick={(e) => handleNav(e, '/', '#adm')}>
-                  Application Modernization
+                <a href="/services" onClick={(e) => handleNav(e, '/services')}>
+                  2. Website Development
                 </a>
               </li>
               <li>
-                <a href="/#adm" onClick={(e) => handleNav(e, '/', '#adm')}>
-                  Maintenance & Support
+                <a href="/services" onClick={(e) => handleNav(e, '/services')}>
+                  3. Software Application
                 </a>
               </li>
               <li>
-                <a href="/#adm" onClick={(e) => handleNav(e, '/', '#adm')}>
-                  Portfolio Rationalization
+                <a
+                  href="/solutions"
+                  onClick={(e) => handleNav(e, '/solutions')}
+                >
+                  WhatsApp & Gmail APIs
                 </a>
               </li>
             </ul>
           </div>
 
           <div className="footer-col">
-            <h4>Products & APIs</h4>
+            <h4>We Promote Across</h4>
             <ul>
               <li>
                 <a
-                  href="/#solutions"
-                  onClick={(e) => handleNav(e, '/', '#solutions')}
+                  href="/digital-marketing"
+                  onClick={(e) => handleNav(e, '/digital-marketing')}
                 >
-                  Custom Websites & Web Apps
+                  TikTok Promotional Videos
                 </a>
               </li>
               <li>
                 <a
-                  href="/#solutions"
-                  onClick={(e) => handleNav(e, '/', '#solutions')}
+                  href="/digital-marketing"
+                  onClick={(e) => handleNav(e, '/digital-marketing')}
                 >
-                  iOS & Android Mobile Apps
+                  Instagram Product Showcase
                 </a>
               </li>
               <li>
                 <a
-                  href="/#solutions"
-                  onClick={(e) => handleNav(e, '/', '#solutions')}
+                  href="/digital-marketing"
+                  onClick={(e) => handleNav(e, '/digital-marketing')}
                 >
-                  WhatsApp Business Cloud API
+                  Facebook Local Reach
                 </a>
               </li>
               <li>
                 <a
-                  href="/#solutions"
-                  onClick={(e) => handleNav(e, '/', '#solutions')}
+                  href="/digital-marketing"
+                  onClick={(e) => handleNav(e, '/digital-marketing')}
                 >
-                  Gmail & Workspace API
+                  WhatsApp & Your Own Website
                 </a>
               </li>
             </ul>
@@ -119,7 +127,7 @@ function Footer({ onNavigate }) {
                 </a>
               </li>
               <li>
-                <a href="/#about" onClick={(e) => handleNav(e, '/', '#about')}>
+                <a href="/about" onClick={(e) => handleNav(e, '/about')}>
                   About Us
                 </a>
               </li>
@@ -142,8 +150,7 @@ function Footer({ onNavigate }) {
 
         <div className="footer-bottom">
           <span>
-            © {new Date().getFullYear()} {COMPANY_INFO.legalName}. All rights
-            reserved.
+            © {CURRENT_YEAR} {COMPANY_INFO.legalName}. All rights reserved.
           </span>
           <span>{COMPANY_INFO.address}</span>
         </div>

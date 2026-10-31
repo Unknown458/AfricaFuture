@@ -1,8 +1,11 @@
-function CtaSection({ onNavigate }) {
-  const handleContactClick = (e) => {
-    if (!onNavigate) return;
+function CtaSection({ onNavigate, onOpenGetStarted }) {
+  const handleGetStarted = (e) => {
     e.preventDefault();
-    onNavigate('/contact');
+    if (onOpenGetStarted) {
+      onOpenGetStarted();
+    } else if (onNavigate) {
+      onNavigate('/contact');
+    }
   };
 
   return (
@@ -11,24 +14,22 @@ function CtaSection({ onNavigate }) {
         <div className="cta-banner reveal">
           <div className="section-badge">
             <span className="badge-dot" />
-            <span>Ready to Launch with africafuture?</span>
+            <span>Starting from R350 per month • Sign Up Today</span>
           </div>
           <h2
             className="section-title"
-            style={{ maxWidth: '780px', margin: '0 auto 16px' }}
+            style={{ maxWidth: '820px', margin: '0 auto 16px' }}
           >
-            Get Your Custom{' '}
-            <span className="gradient-text">
-              Website, App, or WhatsApp & Gmail API
-            </span>{' '}
-            Live
+            Your Business Deserves{' '}
+            <span className="gradient-text">More Customers!</span>
           </h2>
           <p
             className="section-subtitle"
-            style={{ maxWidth: '620px', margin: '0 auto 32px' }}
+            style={{ maxWidth: '660px', margin: '0 auto 32px' }}
           >
-            Talk to our engineering team today for a live demo of our web/app
-            development and automated communication APIs.
+            Sign Up with AfricaFuture Today and Let Us Help Your Business Grow.
+            We bring your products closer to customers – and help bring
+            customers to your store!
           </p>
           <div
             style={{
@@ -38,16 +39,24 @@ function CtaSection({ onNavigate }) {
               flexWrap: 'wrap',
             }}
           >
+            <button
+              type="button"
+              className="btn-orange btn-get-started-pulse"
+              onClick={handleGetStarted}
+            >
+              <span>GET STARTED TODAY</span>
+              <span>↗</span>
+            </button>
             <a
               href="/contact"
-              className="btn-orange"
-              onClick={handleContactClick}
+              className="btn-secondary"
+              onClick={(e) => {
+                if (!onNavigate) return;
+                e.preventDefault();
+                onNavigate('/contact');
+              }}
             >
-              <span>Consult our Experts</span>
-              <span>↗</span>
-            </a>
-            <a href="#solutions" className="btn-secondary">
-              <span>Explore APIs & Services</span>
+              <span>Visit Contact Page</span>
             </a>
           </div>
         </div>

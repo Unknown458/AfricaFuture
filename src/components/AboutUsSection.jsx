@@ -40,42 +40,43 @@ function StatIcon({ type }) {
   }
 }
 
-function CountUpNumber({ target, suffix, active }) {
+function CountUpNumber({ target, prefix = '', suffix = '', active }) {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    if (!active) {
-      setCount(0);
-      return;
-    }
-
     let startTime = null;
     const duration = 1500;
+    let frameId;
 
     const animate = (timestamp) => {
+      if (!active) {
+        setCount(0);
+        return;
+      }
       if (!startTime) startTime = timestamp;
       const progress = Math.min((timestamp - startTime) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       setCount(Math.round(eased * target));
 
       if (progress < 1) {
-        requestAnimationFrame(animate);
+        frameId = requestAnimationFrame(animate);
       }
     };
 
-    const frameId = requestAnimationFrame(animate);
+    frameId = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frameId);
   }, [active, target]);
 
   return (
     <span className="ritovex-stat-number">
+      {prefix}
       {count}
       {suffix}
     </span>
   );
 }
 
-function AboutUsSection() {
+function AboutUsSection({ onOpenGetStarted }) {
   const sectionRef = useRef(null);
   const [separated, setSeparated] = useState(false);
 
@@ -105,7 +106,6 @@ function AboutUsSection() {
       className={`ritovex-about-section ${separated ? 'section-active' : ''}`}
     >
       <div className="container">
-        {/* Centered Header (Always visible & smoothly animated, compact spacing) */}
         <div className="ritovex-about-header">
           <div className="ritovex-about-pill">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -113,24 +113,28 @@ function AboutUsSection() {
               <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
               <line x1="12" y1="22.08" x2="12" y2="12" />
             </svg>
-            <span>About Us</span>
+            <span>About AfricaFuture</span>
           </div>
 
-          <h2 className="ritovex-about-title">Who We Are. Learn About us</h2>
+          <h2 className="ritovex-about-title">
+            Your Complete Digital Marketing, Website & Software Partner
+          </h2>
 
           <p className="ritovex-about-subtitle">
-            We are a dynamic team of innovators, storytellers, and visionaries dedicated
-            to transforming ideas into extraordinary experiences.
+            We help retailers and businesses across South Africa promote their
+            products on TikTok, Instagram, Facebook, and WhatsApp, build
+            professional websites, and deploy custom software applications—starting
+            from just R350/month.
           </p>
         </div>
 
-        {/* Two-Column Content: Left Cutout Portrait + Right Scroll-Animated 2x2 Stats Grid */}
+        {/* Two-Column Content: Left IT Tech Image + Right Scroll-Animated 2x2 Stats Grid */}
         <div className="ritovex-about-grid">
           <div className="ritovex-portrait-wrapper">
             <div className="ritovex-cutout-frame">
               <img
-                src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1000&q=85"
-                alt="africafuture Creative & Engineering Team"
+                src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1200&q=85"
+                alt="AfricaFuture - Your Complete Digital Marketing, Website & Software Partner Team"
                 className="ritovex-portrait-img"
               />
               <div className="cutout-notch notch-top-right" />
@@ -155,6 +159,7 @@ function AboutUsSection() {
                     </span>
                     <CountUpNumber
                       target={stat.target}
+                      prefix={stat.prefix}
                       suffix={stat.suffix}
                       active={separated}
                     />
@@ -166,9 +171,13 @@ function AboutUsSection() {
             </div>
 
             <div className="ritovex-about-actions">
-              <a href="#solutions" className="ritovex-dark-btn">
-                More About Us
-              </a>
+              <button
+                type="button"
+                className="ritovex-dark-btn"
+                onClick={onOpenGetStarted}
+              >
+                GET STARTED TODAY
+              </button>
 
               <a href={`tel:${COMPANY_PHONE}`} className="ritovex-quote-call">
                 <span className="quote-phone-icon-box">
@@ -177,7 +186,7 @@ function AboutUsSection() {
                   </svg>
                 </span>
                 <div>
-                  <div className="quote-small-text">Get free Quote</div>
+                  <div className="quote-small-text">Call Us Directly</div>
                   <div className="quote-phone-number">{COMPANY_PHONE}</div>
                 </div>
               </a>
