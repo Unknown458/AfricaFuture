@@ -1,0 +1,162 @@
+import AdminIcon from './AdminIcon';
+import { EmptyState, StatusChip } from './AdminUI';
+import { formatDate } from './formatDate';
+import { getPromotionStatus } from '../services/contentStore';
+import { getSession } from '../services/auth';
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
+
+function Dashboard({ gallery, promotions, siteImages, goTo }) {
+  const statuses = promotions.map((p) => getPromotionStatus(p));
+  const count = (s) => statuses.filter((x) => x === s).length;
+  const visibleImages = gallery.filter((g) => g.visible !== false).length;
+  const recent = [...gallery].sort((a, b) => b.createdAt - a.createdAt).slice(0, 8);
+  const livePromos = promotions.filter((p) => getPromotionStatus(p) === 'live').slice(0, 4);
+  const session = getSession();
+
+  const stats = [
+    { label: 'Gallery Images', value: gallery.length, sub: `${visibleImages} visible on site`, icon: 'gallery', tone: 'orange', to: 'gallery' },
+    { label: 'Live Promotions', value: count('live'), sub: 'Showing on website now', icon: 'promo', tone: 'green', to: 'promotions' },
+    { label: 'Scheduled', value: count('scheduled'), sub: 'Will go live automatically', icon: 'calendar', tone: 'purple', to: 'promotions' },
+    { label: 'Custom Site Images', value: Object.keys(siteImages).length, sub: 'of 3 replaceable images', icon: 'layout', tone: 'navy', to: 'site-images' },
+  ];
+
+  return (
+    <div className="adm-stack">
+      {/* Welcome banner */}
+      <section className="adm-welcome">
+        <div>
+          <span className="adm-pill adm-pill--light">Dashboard</span>
+          <h2>
+            {greeting()}, <span>{session?.username || 'Admin'}</span> 👋
+          </h2>
+          <p>
+            Keep your website fresh. Upload new images or launch a promotion — changes go live on
+            your website straight away.
+          </p>
+          <div className="adm-welcome-actions">
+            <button type="button" className="adm-btn adm-btn--primary" onClick={() => goTo('gallery')}>
+              <AdminIcon name="upload" size={16} /> Upload Images
+            </button>
+            <button type="button" className="adm-btn adm-btn--light" onClick={() => goTo('promotions')}>
+              <AdminIcon name="plus" size={16} /> New Promotion
+            </button>
+          </div>
+        </div>
+        <div className="adm-welcome-meta">
+          <span>Last sign-in</span>
+          <strong>{session ? new Date(session.loginAt).toLocaleString() : '—'}</strong>
+        </div>
+      </section>
+
+      {/* Stats */}
+      <section className="adm-stats">
+        {stats.map((s) => (
+          <button key={s.label} type="button" className={`adm-stat adm-stat--${s.tone}`} onClick={() => goTo(s.to)}>
+            <div className="adm-stat-icon">
+              <AdminIcon name={s.icon} size={20} />
+            </div>
+            <div>
+              <div className="adm-stat-value">{s.value}</div>
+              <div className="adm-stat-label">{s.label}</div>
+              <div className="adm-stat-sub">{s.sub}</div>
+            </div>
+          </button>
+        ))}
+      </section>
+
+      <div className="adm-grid-2">
+        {/* Recent uploads */}
+        <section className="adm-card">
+          <div className="adm-card-head">
+            <h3>Recent Uploads</h3>
+            <button type="button" className="adm-link" onClick={() => goTo('gallery')}>
+              View all →
+            </button>
+          </div>
+          {recent.length ? (
+            <div className="adm-recent-grid">
+              {recent.map((g) => (
+                <div key={g.id} className="adm-recent-item" title={g.title}>
+                  <img src={g.src} alt={g.title} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon="gallery"
+              title="No images yet"
+              text="Upload your first images to show them in the website gallery."
+              action={
+                <button type="button" className="adm-btn adm-btn--primary" onClick={() => goTo('gallery')}>
+                  Upload Images
+                </button>
+              }
+            />
+          )}
+        </section>
+
+        {/* Live promotions */}
+        <section className="adm-card">
+          <div className="adm-card-head">
+            <h3>Live Promotions</h3>
+            <button type="button" className="adm-link" onClick={() => goTo('promotions')}>
+              Manage →
+            </button>
+          </div>
+          {livePromos.length ? (
+            <ul className="adm-mini-list">
+              {livePromos.map((p) => (
+                <li key={p.id}>
+                  <div className="adm-mini-thumb">{p.image ? <img src={p.image} alt="" /> : <AdminIcon name="promo" />}</div>
+                  <div className="adm-mini-info">
+                    <strong>{p.title}</strong>
+                    <span>{p.endDate ? `Ends ${formatDate(p.endDate)}` : 'No end date'}</span>
+                  </div>
+                  <StatusChip status="live" />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <EmptyState
+              icon="promo"
+              title="No live promotions"
+              text="Create a promotion to highlight special offers on your homepage."
+              action={
+                <button type="button" className="adm-btn adm-btn--primary" onClick={() => goTo('promotions')}>
+                  Create Promotion
+                </button>
+              }
+            />
+          )}
+        </section>
+      </div>
+
+      {/* Tips */}
+      <section className="adm-card adm-tips">
+        <h3>💡 Tips for great results</h3>
+        <ul>
+          <li>
+            Use <strong>landscape images</strong> (e.g. 1600×1000) for the best look on all screens.
+          </li>
+          <li>
+            Give every image a <strong>clear title</strong> — it helps customers and search engines.
+          </li>
+          <li>
+            Set an <strong>end date</strong> on promotions so they disappear automatically when the offer ends.
+          </li>
+          <li>
+            Download a <strong>backup</strong> from Settings regularly to keep your content safe.
+          </li>
+        </ul>
+      </section>
+    </div>
+  );
+}
+
+export default Dashboard;

@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import './App.css';
 import LandingPage from './pages/LandingPage';
 import ContactPage from './pages/ContactPage';
+import LoginPage from './pages/LoginPage';
+import AdminPanel from './pages/AdminPanel';
+import { isAuthenticated } from './services/auth';
 import { useTheme } from './hooks/useTheme';
 
 const ROUTE_TO_SECTION = {
@@ -30,7 +33,8 @@ function App() {
   useTheme();
 
   const [currentPath, setCurrentPath] = useState(() => {
-    return window.location.pathname || '/';
+    const p = window.location.pathname || '/';
+    return p.length > 1 ? p.replace(/\/+$/, '') : p;
   });
 
   useEffect(() => {
@@ -40,7 +44,8 @@ function App() {
     }
 
     const handlePopState = () => {
-      const path = window.location.pathname || '/';
+      const raw = window.location.pathname || '/';
+      const path = raw.length > 1 ? raw.replace(/\/+$/, '') : raw;
       setCurrentPath(path);
       scrollToRouteSection(path);
     };
@@ -56,6 +61,23 @@ function App() {
 
   if (currentPath === '/contact') {
     return <ContactPage currentPath={currentPath} onNavigate={navigate} />;
+  }
+
+  // Admin area — only reachable by typing /login or /admin directly
+  if (currentPath === '/login') {
+    if (isAuthenticated()) {
+      window.history.replaceState({}, '', '/admin');
+      return <AdminPanel onNavigate={navigate} />;
+    }
+    return <LoginPage onNavigate={navigate} />;
+  }
+
+  if (currentPath === '/admin' || currentPath.startsWith('/admin/')) {
+    if (!isAuthenticated()) {
+      window.history.replaceState({}, '', '/login');
+      return <LoginPage onNavigate={navigate} />;
+    }
+    return <AdminPanel onNavigate={navigate} />;
   }
 
   return <LandingPage currentPath={currentPath} onNavigate={navigate} />;
