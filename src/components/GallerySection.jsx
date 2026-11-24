@@ -66,20 +66,55 @@ function GallerySection({ gallery = [] }) {
         )}
 
         <div className="site-gallery-grid">
-          {items.map((item, idx) => (
-            <button
-              key={item.id}
-              type="button"
-              className="site-gallery-item"
-              onClick={() => setLightbox(idx)}
-            >
-              <img src={item.src} alt={item.title || 'Gallery image'} loading="lazy" />
-              <div className="site-gallery-overlay">
-                {item.category && <span className="site-gallery-cat">{item.category}</span>}
-                {item.title && <h4>{item.title}</h4>}
-              </div>
-            </button>
-          ))}
+          {items.map((item, idx) => {
+            const isVideo =
+              item.type === 'video' ||
+              item.mimeType?.startsWith('video/') ||
+              item.src?.startsWith('data:video');
+
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className="site-gallery-item"
+                onClick={() => setLightbox(idx)}
+              >
+                {isVideo ? (
+                  item.poster ? (
+                    <img src={item.poster} alt={item.title || 'Gallery video'} loading="lazy" />
+                  ) : (
+                    <video src={item.src} muted preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  )
+                ) : (
+                  <img src={item.src} alt={item.title || 'Gallery image'} loading="lazy" />
+                )}
+
+                {isVideo && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: 10,
+                      right: 10,
+                      background: 'rgba(249, 115, 22, 0.9)',
+                      color: '#fff',
+                      fontSize: '0.72rem',
+                      fontWeight: 700,
+                      padding: '3px 8px',
+                      borderRadius: 999,
+                      zIndex: 2,
+                    }}
+                  >
+                    ▶ Video
+                  </span>
+                )}
+
+                <div className="site-gallery-overlay">
+                  {item.category && <span className="site-gallery-cat">{item.category}</span>}
+                  {item.title && <h4>{item.title}</h4>}
+                </div>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -115,7 +150,20 @@ function GallerySection({ gallery = [] }) {
             </>
           )}
           <figure className="site-lightbox-figure" onClick={(e) => e.stopPropagation()}>
-            <img src={current.src} alt={current.title || 'Gallery image'} />
+            {current.type === 'video' ||
+            current.mimeType?.startsWith('video/') ||
+            current.src?.startsWith('data:video') ? (
+              <video
+                src={current.src}
+                poster={current.poster || undefined}
+                controls
+                autoPlay
+                playsInline
+                style={{ maxWidth: '90vw', maxHeight: '75vh', borderRadius: 8, background: '#000' }}
+              />
+            ) : (
+              <img src={current.src} alt={current.title || 'Gallery image'} />
+            )}
             {(current.title || current.caption) && (
               <figcaption>
                 {current.title && <strong>{current.title}</strong>}

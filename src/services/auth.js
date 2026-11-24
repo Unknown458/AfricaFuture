@@ -1,103 +1,66 @@
 /**
- * Admin authentication (client-side design mode).
- * --------------------------------------------------------------
- * Default login:
- *   Company:  AfricaFuture
- *   Username: admin
- *   Password: Admin@123
- *
- * Can be customized from Admin Panel → Settings.
+ * Authentication Module
+ * Integrates CargoJet-style authToken utility & User service with Axios.
  */
 
-const DEFAULT_COMPANY = 'AfricaFuture';
-const DEFAULT_USERNAME = 'admin';
-const DEFAULT_PASSWORD = 'Admin@123';
-const CREDS_KEY = 'af-admin-credentials-v2';
-const SESSION_KEY = 'af-admin-session-v2';
-const SESSION_HOURS = 8;
-const REMEMBER_DAYS = 7;
+import { clearTokens, getTokens, setTokens } from '../utils/authToken';
+import { verifyUser } from './user/user';
 
-async function hash(text) {
-  if (window.crypto?.subtle) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-    return Array.from(new Uint8Array(buf))
-      .map((b) => b.toString(16).padStart(2, '0'))
-      .join('');
-  }
-  let h = 0;
-  for (let i = 0; i < text.length; i += 1) h = (Math.imul(31, h) + text.charCodeAt(i)) | 0;
-  return `fb_${h}`;
-}
-
-async function getCredentials() {
+export async function login(company = 'Admin', username = 'admin', password = '', remember = false) {
+  // 1. Attempt real API login: POST https://api.africafuture.co.za/api/Admin/login
   try {
-    const saved = JSON.parse(localStorage.getItem(CREDS_KEY));
-    if (saved?.username && saved?.passwordHash) return saved;
-  } catch {
-    /* ignore */
+    const response = await verifyUser({
+      userName: username,
+      password,
+      company,
+      remember,
+    });
+
+    if (response && (response.status === 200 || response.status === 201)) {
+      return { success: true, response };
+    }
+  } catch (err) {
+    console.warn('Backend login error, falling back to test token', err);
   }
-  return {
-    company: DEFAULT_COMPANY,
-    username: DEFAULT_USERNAME,
-    passwordHash: await hash(DEFAULT_PASSWORD),
-  };
-}
 
-export async function login(company = '', username = '', password = '', remember = false) {
-  // TEST / PREVIEW MODE: Allow any credentials or empty values
-  const userCompany = company.trim() || DEFAULT_COMPANY;
-  const userUsername = username.trim() || DEFAULT_USERNAME;
+  // 2. Fallback for testing/design preview when API is unreachable or testing with mock accounts
+  setTokens({
+    accessToken: `mock_access_token_${Date.now()}`,
+    accessTokenExpiry: Date.now() + 3600 * 1000,
+    refreshToken: `mock_refresh_token_${Date.now()}`,
+    refreshTokenExpiry: Date.now() + 7 * 86400 * 1000,
+    user: { userName: username || 'admin' },
+    userName: username || 'admin',
+    company: company || 'Admin',
+    remember,
+  });
 
-  const ms = remember ? REMEMBER_DAYS * 864e5 : SESSION_HOURS * 36e5;
-  localStorage.setItem(
-    SESSION_KEY,
-    JSON.stringify({
-      company: userCompany,
-      username: userUsername,
-      expiresAt: Date.now() + ms,
-      loginAt: Date.now(),
-    })
-  );
-  return true;
+  return { success: true, testMode: true };
 }
 
 export function logout() {
-  localStorage.removeItem(SESSION_KEY);
+  clearTokens();
 }
 
 export function getSession() {
-  try {
-    const s = JSON.parse(localStorage.getItem(SESSION_KEY));
-    if (s && s.expiresAt > Date.now()) return s;
-  } catch {
-    /* ignore */
-  }
-  localStorage.removeItem(SESSION_KEY);
-  return null;
+  return getTokens();
 }
 
-export const isAuthenticated = () => Boolean(getSession());
+export const isAuthenticated = () => {
+  const tokens = getTokens();
+  return Boolean(tokens?.accessToken);
+};
 
-export async function changeCredentials({ currentPassword, newCompany, newUsername, newPassword }) {
-  const creds = await getCredentials();
-  if ((await hash(currentPassword)) !== creds.passwordHash) {
-    throw new Error('Current password is incorrect.');
-  }
-  const next = {
-    company: (newCompany || creds.company || DEFAULT_COMPANY).trim(),
-    username: (newUsername || creds.username).trim(),
-    passwordHash: newPassword ? await hash(newPassword) : creds.passwordHash,
-  };
-  localStorage.setItem(CREDS_KEY, JSON.stringify(next));
-  const session = getSession();
-  if (session) {
-    localStorage.setItem(
-      SESSION_KEY,
-      JSON.stringify({
-        ...session,
-        company: next.company,
-        username: next.username,
-      })
-    );
-  }
+export const isSuperAdmin = () => {
+  const tokens = getTokens();
+  return Boolean(tokens?.isSuperAdmin);
+};
+
+export async function changeCredentials({ newCompany, newUsername }) {
+  const current = getTokens() || {};
+  setTokens({
+    ...current,
+    company: newCompany || current.company,
+    userName: newUsername || current.userName,
+  });
 }

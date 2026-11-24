@@ -9,12 +9,14 @@
  *   `fetch(...)` requests to your target website's backend API.
  */
 
-export const API_BASE_URL = '';
+import Api, { BASE_URL } from '../app/api';
+
+export const API_BASE_URL = BASE_URL;
 
 export const API_ENDPOINTS = {
-  gallery: '',     // e.g. `${API_BASE_URL}/api/gallery`
-  promotions: '',  // e.g. `${API_BASE_URL}/api/promotions`
-  siteImages: '',  // e.g. `${API_BASE_URL}/api/site-images`
+  gallery: BASE_URL ? `${BASE_URL}${Api.Gallery}` : '',
+  promotions: BASE_URL ? `${BASE_URL}${Api.Promotions}` : '',
+  siteImages: BASE_URL ? `${BASE_URL}${Api.SiteImages}` : '',
 };
 
 const DB_NAME = 'africafuture-cms';
@@ -189,7 +191,7 @@ export async function clearAll(notify = true) {
   if (notify) notifyChange();
 }
 
-/* ---------------- Image processing ---------------- */
+/* ---------------- Media processing (Images & Videos) ---------------- */
 
 export const ACCEPTED_IMAGE_TYPES = [
   'image/jpeg',
@@ -197,7 +199,21 @@ export const ACCEPTED_IMAGE_TYPES = [
   'image/webp',
   'image/gif',
 ];
-export const MAX_UPLOAD_MB = 10;
+
+export const ACCEPTED_VIDEO_TYPES = [
+  'video/mp4',
+  'video/webm',
+  'video/ogg',
+  'video/quicktime',
+];
+
+export const ACCEPTED_MEDIA_TYPES = [
+  ...ACCEPTED_IMAGE_TYPES,
+  ...ACCEPTED_VIDEO_TYPES,
+];
+
+export const MAX_UPLOAD_MB = 15;
+export const MAX_VIDEO_MB = 100;
 
 /**
  * Validates, resizes and compresses an image file in the browser.
@@ -240,6 +256,107 @@ export function processImage(file, { maxSize = 1600, quality = 0.85 } = {}) {
     };
     reader.readAsDataURL(file);
   });
+}
+
+/**
+ * Reads a video file and generates a poster thumbnail frame.
+ */
+export function processVideo(file) {
+  return new Promise((resolve, reject) => {
+    const isVideo =
+      file.type.startsWith('video/') ||
+      /\.(mp4|webm|mov|ogg|m4v)$/i.test(file.name);
+
+    if (!isVideo) {
+      reject(new Error(`${file.name}: only MP4, WEBM, MOV or OGG videos are allowed.`));
+      return;
+    }
+    if (file.size > MAX_VIDEO_MB * 1024 * 1024) {
+      reject(new Error(`${file.name}: video is larger than ${MAX_VIDEO_MB}MB.`));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error(`${file.name}: could not be read.`));
+    reader.onload = () => {
+      const dataUrl = reader.result;
+
+      try {
+        const video = document.createElement('video');
+        video.preload = 'metadata';
+        video.src = dataUrl;
+        video.muted = true;
+        video.playsInline = true;
+        video.currentTime = 0.5;
+
+        let resolved = false;
+        const done = (poster = null, duration = null) => {
+          if (resolved) return;
+          resolved = true;
+          resolve({
+            src: dataUrl,
+            poster,
+            type: 'video',
+            mimeType: file.type || 'video/mp4',
+            duration,
+          });
+        };
+
+        const timer = setTimeout(() => done(null), 3500);
+
+        video.onloadeddata = () => {
+          clearTimeout(timer);
+          try {
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.min(video.videoWidth || 640, 640);
+            const ratio = (video.videoHeight || 360) / (video.videoWidth || 640);
+            canvas.height = Math.round(canvas.width * (ratio || 0.5625));
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const poster = canvas.toDataURL('image/jpeg', 0.82);
+            done(poster, video.duration || null);
+          } catch {
+            done(null, video.duration || null);
+          }
+        };
+
+        video.onerror = () => {
+          clearTimeout(timer);
+          done(null);
+        };
+      } catch {
+        resolve({
+          src: dataUrl,
+          poster: null,
+          type: 'video',
+          mimeType: file.type || 'video/mp4',
+          duration: null,
+        });
+      }
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/**
+ * Universal media processor: automatically detects image vs video.
+ */
+export async function processMedia(file, options = {}) {
+  const isVideo =
+    file.type?.startsWith('video/') ||
+    /\.(mp4|webm|mov|ogg|m4v)$/i.test(file.name);
+
+  if (isVideo) {
+    return processVideo(file);
+  }
+
+  const src = await processImage(file, options);
+  return {
+    src,
+    poster: null,
+    type: 'image',
+    mimeType: file.type || 'image/jpeg',
+  };
 }
 
 export function dataUrlSizeKb(dataUrl = '') {

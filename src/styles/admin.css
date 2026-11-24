@@ -2084,3 +2084,312 @@
   .adm-toasts { left: 12px; right: 12px; bottom: 12px; }
   .adm-toast { min-width: 0; max-width: none; }
 }
+
+/* ---------------- Super Admin & Website Control ---------------- */
+
+.adm-pill--gold {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #d97706;
+}
+
+.adm-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.adm-badge--gold {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+.adm-badge--blue {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.adm-website-switcher {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  background: var(--adm-surface);
+  border: 1px solid var(--adm-border);
+  color: var(--adm-text-2);
+}
+
+.adm-website-select {
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--adm-text);
+  outline: none;
+  cursor: pointer;
+  padding-right: 8px;
+}
+
+.adm-websites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.adm-website-card {
+  padding: 18px;
+  border-radius: 14px;
+  background: #fbfcfe;
+  border: 1px solid var(--adm-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.adm-website-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+  border-color: #cbd5e1;
+}
+
+.adm-website-card.is-selected {
+  border-color: var(--adm-orange);
+  background: #fff8f5;
+  box-shadow: 0 0 0 3px rgba(255, 85, 16, 0.15);
+}
+
+.adm-website-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.adm-website-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #eff6ff;
+  color: #2563eb;
+  display: grid;
+  place-items: center;
+}
+
+.adm-website-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--adm-text);
+}
+
+.adm-website-code {
+  font-size: 0.76rem;
+  color: var(--adm-muted);
+  font-family: monospace;
+}
+
+.adm-website-meta {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.adm-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  margin-top: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--adm-border);
+}
+
+.adm-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.88rem;
+}
+
+.adm-table th {
+  padding: 12px 16px;
+  background: #f8fafc;
+  color: var(--adm-muted);
+  font-weight: 700;
+  font-size: 0.74rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--adm-border);
+}
+
+.adm-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--adm-border);
+  vertical-align: middle;
+}
+
+.adm-table tr:last-child td {
+  border-bottom: none;
+}
+
+.adm-table tr:hover td {
+  background: #fafbfd;
+}
+
+.adm-user-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.adm-user-cell strong {
+  display: block;
+  font-size: 0.92rem;
+}
+
+.adm-user-cell span {
+  font-size: 0.74rem;
+}
+
+/* ---------------- Drag & drop and Video enhancements ---------------- */
+
+.adm-drop-overlay {
+  position: absolute;
+  inset: -8px;
+  background: rgba(255, 85, 16, 0.08);
+  border: 3px dashed var(--adm-orange);
+  border-radius: 20px;
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  cursor: copy;
+  animation: admPulse 1.2s infinite ease-in-out;
+}
+
+@keyframes admPulse {
+  0%, 100% { opacity: 0.95; }
+  50% { opacity: 0.65; }
+}
+
+.adm-drop-overlay-box {
+  background: #ffffff;
+  padding: 32px 48px;
+  border-radius: 16px;
+  box-shadow: 0 20px 45px rgba(255, 85, 16, 0.25);
+  text-align: center;
+}
+
+.adm-drop-overlay-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: rgba(255, 85, 16, 0.12);
+  color: var(--adm-orange);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.adm-drop-overlay-box h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--adm-navy);
+  margin-bottom: 6px;
+}
+
+.adm-drop-overlay-box p {
+  color: var(--adm-muted);
+  font-size: 0.9rem;
+}
+
+/* Video card styles */
+.adm-video-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #000;
+}
+
+.adm-video-wrapper video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.adm-media-play-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.25);
+  color: #fff;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.adm-media-play-overlay svg {
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.5));
+  width: 32px;
+  height: 32px;
+}
+
+.adm-media-card:hover .adm-media-play-overlay {
+  opacity: 0.3;
+}
+
+.adm-media-flag--video {
+  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%) !important;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Drag to reorder styles */
+.adm-media-grip-handle {
+  position: absolute;
+  top: 10px;
+  left: 42px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.95);
+  display: grid;
+  place-items: center;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  color: #64748b;
+}
+
+.adm-media-card:hover .adm-media-grip-handle {
+  opacity: 1;
+}
+
+.adm-media-card.is-dragging {
+  opacity: 0.4;
+  transform: scale(0.96);
+  border: 2px dashed var(--adm-orange);
+}
+
+.adm-media-card.is-drag-target {
+  border-color: var(--adm-orange);
+  box-shadow: 0 0 0 4px rgba(255, 85, 16, 0.35);
+  transform: translateY(-4px);
+}

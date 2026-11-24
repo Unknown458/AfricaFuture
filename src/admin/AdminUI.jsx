@@ -1,9 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import AdminIcon from './AdminIcon';
-import { ACCEPTED_IMAGE_TYPES, MAX_UPLOAD_MB } from '../services/contentStore';
+import {
+  ACCEPTED_MEDIA_TYPES,
+  MAX_UPLOAD_MB,
+  MAX_VIDEO_MB,
+} from '../services/contentStore';
 
-/** Drag & drop / click-to-browse image picker. */
-export function Dropzone({ onFiles, multiple = true, compact = false, label }) {
+/** Drag & drop / click-to-browse image and video picker. */
+export function Dropzone({
+  onFiles,
+  multiple = true,
+  compact = false,
+  label,
+  accept,
+  helpText,
+}) {
   const inputRef = useRef(null);
   const [drag, setDrag] = useState(false);
 
@@ -12,17 +23,24 @@ export function Dropzone({ onFiles, multiple = true, compact = false, label }) {
     if (files.length) onFiles(multiple ? files : [files[0]]);
   };
 
+  const accepted = accept || ACCEPTED_MEDIA_TYPES.join(',');
+
   return (
     <div
       className={`adm-dropzone ${drag ? 'is-drag' : ''} ${compact ? 'is-compact' : ''}`}
       onClick={() => inputRef.current?.click()}
       onDragOver={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         setDrag(true);
       }}
-      onDragLeave={() => setDrag(false)}
+      onDragLeave={(e) => {
+        e.stopPropagation();
+        setDrag(false);
+      }}
       onDrop={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         setDrag(false);
         handle(e.dataTransfer.files);
       }}
@@ -33,7 +51,7 @@ export function Dropzone({ onFiles, multiple = true, compact = false, label }) {
       <input
         ref={inputRef}
         type="file"
-        accept={ACCEPTED_IMAGE_TYPES.join(',')}
+        accept={accepted}
         multiple={multiple}
         hidden
         onChange={(e) => {
@@ -45,8 +63,16 @@ export function Dropzone({ onFiles, multiple = true, compact = false, label }) {
         <AdminIcon name="upload" size={compact ? 20 : 28} />
       </div>
       <div className="adm-dropzone-text">
-        <strong>{label || (multiple ? 'Drop images here or click to browse' : 'Drop an image or click to browse')}</strong>
-        <span>JPG, PNG, WEBP or GIF · up to {MAX_UPLOAD_MB}MB each</span>
+        <strong>
+          {label ||
+            (multiple
+              ? 'Drop images & videos here or click to browse'
+              : 'Drop an image or video, or click to browse')}
+        </strong>
+        <span>
+          {helpText ||
+            `JPG, PNG, WEBP, GIF, MP4, WEBM · Images up to ${MAX_UPLOAD_MB}MB, Videos up to ${MAX_VIDEO_MB}MB`}
+        </span>
       </div>
     </div>
   );

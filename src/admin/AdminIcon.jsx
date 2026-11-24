@@ -133,6 +133,45 @@ const PATHS = {
       <line x1="3" y1="10" x2="21" y2="10" />
     </>
   ),
+  users: (
+    <>
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+    </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="10" />
+      <line x1="2" y1="12" x2="22" y2="12" />
+      <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+    </>
+  ),
+  shield: (
+    <>
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </>
+  ),
+  video: (
+    <>
+      <polygon points="23 7 16 12 23 17 23 7" />
+      <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+    </>
+  ),
+  play: (
+    <polygon points="5 3 19 12 5 21 5 3" />
+  ),
+  grip: (
+    <>
+      <circle cx="9" cy="12" r="1.5" />
+      <circle cx="9" cy="5" r="1.5" />
+      <circle cx="9" cy="19" r="1.5" />
+      <circle cx="15" cy="12" r="1.5" />
+      <circle cx="15" cy="5" r="1.5" />
+      <circle cx="15" cy="19" r="1.5" />
+    </>
+  ),
 };
 
 function AdminIcon({ name, size = 18, filled = false }) {
