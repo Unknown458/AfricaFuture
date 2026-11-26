@@ -76,7 +76,7 @@ export function Login({
         <button type="button" className="adm-login-logo" onClick={() => onNavigate('/')}>
           <span className="adm-logo-mark">{logoTag}</span>
           <span className="adm-logo-text">
-            {brandName}
+            Admin<span>Portal</span>
           </span>
         </button>
 
@@ -103,7 +103,7 @@ export function Login({
           </ul>
         </div>
 
-        <p className="adm-login-brand-foot">© {CURRENT_YEAR} {brandName}. All rights reserved.</p>
+        <p className="adm-login-brand-foot">© {CURRENT_YEAR} CrystalTechnoSoft. All rights reserved.</p>
       </aside>
 
       {/* Right form panel */}

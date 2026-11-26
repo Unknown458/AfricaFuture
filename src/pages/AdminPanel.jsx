@@ -182,9 +182,8 @@ function AdminPanel({ onNavigate, tenant = 'Admin', loginPath = '/login' }) {
           <span className="adm-logo-mark">{logoMark}</span>
           <div>
             <div className="adm-logo-text">
-              {activeTenant}<span>Panel</span>
+              Admin<span>Portal</span>
             </div>
-            <div className="adm-sidebar-sub">Admin Panel</div>
           </div>
         </div>
 
