@@ -40,6 +40,13 @@ export const verifyUser = async ({ userName, password, company = 'Admin', rememb
 
     if (response && (response.status === 200 || response.status === 201)) {
       const data = response.data || {};
+
+      // The API returns HTTP 200 with { success: false, message: "..." } on bad credentials,
+      // so never store tokens for a rejected login.
+      if (data.success === false || data.isSuccess === false) {
+        return response;
+      }
+
       const accessToken =
         data.accessToken || data.token || data.jwt || data.data?.accessToken;
       const refreshToken =
@@ -49,15 +56,23 @@ export const verifyUser = async ({ userName, password, company = 'Admin', rememb
       const refreshTokenExpiry =
         data.refreshTokenExpiresAt || data.refreshTokenExpiry;
 
+      const websiteId =
+        data.websiteId ||
+        data.data?.websiteId ||
+        data.user?.websiteId ||
+        data.admin?.websiteId;
+
       setTokens({
         accessToken,
         accessTokenExpiry,
         refreshToken,
         refreshTokenExpiry,
         adminId: data.adminId,
+        websiteId,
         isSuperAdmin: data.isSuperAdmin,
         user: {
           adminId: data.adminId,
+          websiteId,
           userName: data.userName || payload.userName,
           isSuperAdmin: data.isSuperAdmin,
         },
@@ -100,7 +115,7 @@ export const verifyRefreshToken = async (refreshToken) => {
       const nextAccess =
         data.accessToken || data.token || data.data?.accessToken || current.accessToken;
       const nextRefresh =
-        data.refreshToken || data.data?.refreshToken || current.refreshToken;
+        data.refreshToken || data.data?.refreshToken || refreshToken;
       const nextAccessExpiry =
         data.accessTokenExpiresAt || data.accessTokenExpiry || current.accessTokenExpiry;
       const nextRefreshExpiry =
@@ -112,6 +127,10 @@ export const verifyRefreshToken = async (refreshToken) => {
         accessTokenExpiry: nextAccessExpiry,
         refreshToken: nextRefresh,
         refreshTokenExpiry: nextRefreshExpiry,
+        adminId: data.adminId ?? current.adminId,
+        isSuperAdmin: data.isSuperAdmin ?? current.isSuperAdmin,
+        userName: data.userName || current.userName,
+        company: current.company || 'Admin',
       });
     }
 

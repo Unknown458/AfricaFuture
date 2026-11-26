@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import AdminIcon from '../admin/AdminIcon';
 import Dashboard from '../admin/Dashboard';
 import GalleryManager from '../admin/GalleryManager';
@@ -8,7 +8,9 @@ import WebsiteAdminsManager from '../admin/WebsiteAdminsManager';
 import SettingsView from '../admin/SettingsView';
 import { Modal } from '../admin/AdminUI';
 import { useSiteContent } from '../hooks/useSiteContent';
+import AuthMiddleware from '../middlewares/auth/auth';
 import { getSession, logout } from '../services/auth';
+import { getMediaListApi, mapApiMediaItem } from '../services/media/mediaService';
 import { getAllWebsites } from '../services/website/websiteService';
 import '../styles/admin.css';
 
@@ -30,12 +32,62 @@ function AdminPanel({ onNavigate, tenant = 'Admin', loginPath = '/login' }) {
   const session = getSession();
   const isSuperAdmin = Boolean(session?.isSuperAdmin);
 
+  const toast = useCallback((message, type = 'success') => {
+    const id = Math.random().toString(36).slice(2);
+    setToasts((list) => [...list, { id, message, type }]);
+    setTimeout(() => setToasts((list) => list.filter((t) => t.id !== id)), 3800);
+  }, []);
+
+  const confirm = useCallback(
+    (options) =>
+      new Promise((resolve) => {
+        confirmResolver.current = resolve;
+        setConfirmState(options);
+      }),
+    []
+  );
+
+  const closeConfirm = (result) => {
+    confirmResolver.current?.(result);
+    confirmResolver.current = null;
+    setConfirmState(null);
+  };
+
   // SuperAdmin multi-website state
   const [websites, setWebsites] = useState([]);
   const [currentWebsite, setCurrentWebsite] = useState(null);
+  const [serverMediaList, setServerMediaList] = useState([]);
 
+  const activeWebsiteId = currentWebsite?.websiteId || websites[0]?.websiteId || 1;
   const activeTenant = currentWebsite?.websiteName || session?.company || tenant;
   const logoMark = activeTenant === 'Meemcurtain' ? 'MC' : activeTenant === 'Royalcurtain' ? 'RC' : 'AF';
+
+  // Load server media for Dashboard stats & sidebar count
+  useEffect(() => {
+    let isMounted = true;
+    getMediaListApi({ websiteId: activeWebsiteId })
+      .then((res) => {
+        if (!isMounted) return;
+        if (res?.success && Array.isArray(res.data)) {
+          setServerMediaList(res.data.map(mapApiMediaItem).filter(Boolean));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, [activeWebsiteId, tab]);
+
+  const combinedGallery = useMemo(() => {
+    if (!serverMediaList || serverMediaList.length === 0) {
+      return content.gallery;
+    }
+    const serverIds = new Set(serverMediaList.map((m) => String(m.mediaId || m.id)));
+    const localOnly = content.gallery.filter(
+      (g) => !g.mediaId || !serverIds.has(String(g.mediaId))
+    );
+    return [...serverMediaList, ...localOnly];
+  }, [serverMediaList, content.gallery]);
 
   // Load all websites if SuperAdmin
   useEffect(() => {
@@ -70,34 +122,28 @@ function AdminPanel({ onNavigate, tenant = 'Admin', loginPath = '/login' }) {
     sessionStorage.setItem('af-admin-tab', tab);
   }, [tab]);
 
-  // Kick back to login when session expires
+  // Auto-logout when session expires: verifies with AuthMiddleware every 5 seconds
   useEffect(() => {
-    const t = setInterval(() => {
-      if (!getSession()) onNavigate(loginPath);
-    }, 60000);
-    return () => clearInterval(t);
-  }, [loginPath, onNavigate]);
+    let isMounted = true;
 
-  const toast = useCallback((message, type = 'success') => {
-    const id = Math.random().toString(36).slice(2);
-    setToasts((list) => [...list, { id, message, type }]);
-    setTimeout(() => setToasts((list) => list.filter((t) => t.id !== id)), 3800);
-  }, []);
+    const verifySession = async () => {
+      const isValid = await AuthMiddleware();
+      if (!isMounted) return;
+      if (!isValid) {
+        toast('Session expired. Please sign in again.', 'error');
+        setTimeout(() => {
+          if (isMounted) onNavigate(loginPath);
+        }, 600);
+      }
+    };
 
-  const confirm = useCallback(
-    (options) =>
-      new Promise((resolve) => {
-        confirmResolver.current = resolve;
-        setConfirmState(options);
-      }),
-    []
-  );
-
-  const closeConfirm = (result) => {
-    confirmResolver.current?.(result);
-    confirmResolver.current = null;
-    setConfirmState(null);
-  };
+    verifySession();
+    const timer = setInterval(verifySession, 5000);
+    return () => {
+      isMounted = false;
+      clearInterval(timer);
+    };
+  }, [loginPath, onNavigate, toast]);
 
   const handleLogout = async () => {
     const ok = await confirm({
@@ -126,7 +172,7 @@ function AdminPanel({ onNavigate, tenant = 'Admin', loginPath = '/login' }) {
     : BASE_NAV;
 
   const current = navItems.find((n) => n.id === tab) || navItems[0];
-  const shared = { ...content, toast, confirm, goTo };
+  const shared = { ...content, gallery: combinedGallery, toast, confirm, goTo };
 
   return (
     <div className="adm-shell">
@@ -153,8 +199,8 @@ function AdminPanel({ onNavigate, tenant = 'Admin', loginPath = '/login' }) {
             >
               <AdminIcon name={item.icon} />
               <span>{item.label}</span>
-              {item.id === 'gallery' && content.gallery.length > 0 && (
-                <span className="adm-nav-count">{content.gallery.length}</span>
+              {item.id === 'gallery' && combinedGallery.length > 0 && (
+                <span className="adm-nav-count">{combinedGallery.length}</span>
               )}
               {item.id === 'promotions' && content.promotions.length > 0 && (
                 <span className="adm-nav-count">{content.promotions.length}</span>

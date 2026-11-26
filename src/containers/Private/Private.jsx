@@ -24,8 +24,11 @@ export function Private({ children, onNavigate, redirectPath = '/login' }) {
       }
     };
     checkAuth();
+    const timer = setInterval(checkAuth, 5000);
+
     return () => {
       isMounted = false;
+      clearInterval(timer);
     };
   }, [onNavigate, redirectPath]);
 

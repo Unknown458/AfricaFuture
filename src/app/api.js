@@ -22,6 +22,29 @@ export const Api = {
   Gallery: '/api/gallery',
   Promotions: '/api/promotions',
   SiteImages: '/api/site-images',
+  
+ 
+
+
+
+
+
+  // Website Content & Media APIs
+  WebsiteContentCreate: '/api/WebsiteContent/Create',
+   DeletePermanentlyMedia : '/api/Media/DeletePermanently', 
+  GetWebsiteContentById : (contentId) => `/api/WebsiteContent/GetById/${contentId}`,
+  GetAllWebsiteContents : '/api/WebsiteContent/List',
+  WebsiteContentUpdate : (contentId) => `/api/WebsiteContent/Update/${contentId}`,
+  GetAllWebsiteContentMedia: '/api/WebsiteContentMedia/List',
+  DeleteWebsiteContentMedia : '/api/WebsiteContentMedia/Remove',
+
+
+
+
+  WebsiteContentPublish: (contentId) => `/api/WebsiteContent/Publish/${contentId}`,
+  
+  WebsiteContentMediaAdd: '/api/WebsiteContentMedia/Add',
+
 };
 
 export const BASE_URL =

@@ -6,13 +6,19 @@ import axios from 'axios';
 import Api from '../../app/api';
 import AuthMiddleware from '../../middlewares/auth/auth';
 import { getTokens } from '../../utils/authToken';
+import { getActiveWebsiteId, getWebsiteDomain } from '../../utils/websiteDomain';
 
 const getBaseUrl = () => {
-  const url = import.meta.env.VITE_BASE_URL;
-  if (url) {
-    return url.replace(/\/+$/, '');
+  // In local dev, use empty string so requests go through Vite proxy (/api -> https://api.africafuture.co.za)
+  // This avoids browser CORS block (Preflight OPTIONS missing Access-Control-Allow-Origin)
+  if (import.meta.env.DEV) {
+    return '';
   }
-  return '';
+  const url =
+    import.meta.env.VITE_BASE_URL ||
+    import.meta.env.VITE_API_BASE_URL ||
+    'https://api.africafuture.co.za';
+  return url.replace(/\/+$/, '');
 };
 
 /**
@@ -28,18 +34,26 @@ export const uploadMediaApi = async ({
   file,
   mediaDetails = '',
   displayOrder = 0,
-  websiteId = 1,
+  websiteId,
   onProgress,
 }) => {
   try {
     await AuthMiddleware();
     const tokens = getTokens();
 
+    const dynamicWebsiteId = websiteId || getActiveWebsiteId();
+    if (!dynamicWebsiteId) {
+      return {
+        success: false,
+        message: 'Dynamic websiteId is required for media upload. Please select a website context.',
+      };
+    }
+
     const formData = new FormData();
     formData.append('file', file);
     formData.append('mediaDetails', mediaDetails || '');
     formData.append('displayOrder', String(displayOrder ?? 0));
-    formData.append('websiteId', String(websiteId ?? 1));
+    formData.append('websiteId', String(dynamicWebsiteId));
 
     const headers = {
       ...(tokens?.accessToken ? { Authorization: `Bearer ${tokens.accessToken}` } : {}),
@@ -86,8 +100,9 @@ export const uploadMediaApi = async ({
 
 /**
  * Resolves relative or server file paths to full usable URLs.
+ * Checks websiteId to prepend the correct website domain (websiteId 1 = https://www.meemcurtain.co.za).
  */
-export const resolveMediaUrl = (urlOrPath) => {
+export const resolveMediaUrl = (urlOrPath, websiteId) => {
   if (!urlOrPath) return '';
   if (
     urlOrPath.startsWith('http://') ||
@@ -97,7 +112,7 @@ export const resolveMediaUrl = (urlOrPath) => {
   ) {
     return urlOrPath;
   }
-  const base = 'https://api.africafuture.co.za';
+  const base = getWebsiteDomain(websiteId);
   const clean = urlOrPath.replace(/^[\\/]+/, '').replace(/\\/g, '/');
   return `${base}/${clean}`;
 };
@@ -106,32 +121,62 @@ export const resolveMediaUrl = (urlOrPath) => {
  * Maps raw backend media item from GET /api/Media/List to the gallery schema.
  */
 export const mapApiMediaItem = (item) => {
+  if (!item) return null;
+
   const isVideo =
     item.mediaType === 2 ||
     item.isVideo === true ||
     /\.(mp4|webm|mov|ogg|m4v)$/i.test(
-      item.fileUrl || item.filePath || item.fileName || item.mediaDetails || ''
+      item.mediaName || item.mediaPath || item.fileUrl || item.filePath || item.fileName || item.mediaDetails || ''
     );
 
-  const rawUrl = item.fileUrl || item.filePath || item.url || item.path || '';
-  const src = resolveMediaUrl(rawUrl);
+  let rawUrl =
+    item.mediaPath ||
+    item.mediaName ||
+    item.fileUrl ||
+    item.filePath ||
+    item.url ||
+    item.path ||
+    '';
+
+  // If rawUrl is just a file name (e.g. "xxx.jpeg"), put /images/ or /videos/ in front
+  if (
+    rawUrl &&
+    !rawUrl.startsWith('http://') &&
+    !rawUrl.startsWith('https://') &&
+    !rawUrl.startsWith('data:') &&
+    !rawUrl.startsWith('blob:')
+  ) {
+    if (!rawUrl.includes('/')) {
+      rawUrl = isVideo ? `/videos/${rawUrl}` : `/images/${rawUrl}`;
+    }
+  }
+
+  // Prepend website domain based on websiteId (websiteId 1 -> https://www.meemcurtain.co.za)
+  const src = resolveMediaUrl(rawUrl, item.websiteId);
+  const primaryLinked = item.linkedContents && item.linkedContents.length > 0 ? item.linkedContents[0] : null;
 
   return {
     id: String(item.mediaId || item.id || `media_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`),
     mediaId: item.mediaId || item.id,
+    contentId: primaryLinked?.contentId || item.contentId || null,
+    contentMediaId: primaryLinked?.contentMediaId || item.contentMediaId || null,
+    linkedContents: item.linkedContents || [],
     src,
-    poster: item.thumbnailUrl ? resolveMediaUrl(item.thumbnailUrl) : null,
+    poster: item.thumbnailUrl ? resolveMediaUrl(item.thumbnailUrl, item.websiteId) : null,
     type: isVideo ? 'video' : 'image',
     title:
+      primaryLinked?.contentTitle ||
       item.title ||
       item.mediaDetails ||
+      (item.mediaName ? item.mediaName.replace(/\.[^.]+$/, '') : '') ||
       (item.fileName ? item.fileName.replace(/\.[^.]+$/, '') : 'Media Item'),
-    caption: item.caption || item.mediaDetails || '',
-    category: item.category || (isVideo ? 'Videos' : 'Products'),
+    caption: primaryLinked?.imageDescription || item.caption || item.mediaDetails || '',
+    category: primaryLinked?.category || item.category || (isVideo ? 'Videos' : 'Products'),
     visible: item.isActive !== false,
     order: item.displayOrder ?? 0,
     websiteId: item.websiteId,
-    createdAt: item.createdAt || Date.now(),
+    createdAt: item.uploadedAt || item.createdAt || Date.now(),
   };
 };
 

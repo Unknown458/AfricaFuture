@@ -23,8 +23,10 @@ function Dashboard({
 }) {
   const statuses = promotions.map((p) => getPromotionStatus(p));
   const count = (s) => statuses.filter((x) => x === s).length;
-  const visibleImages = gallery.filter((g) => g.visible !== false).length;
-  const recent = [...gallery].sort((a, b) => b.createdAt - a.createdAt).slice(0, 8);
+  const visibleImages = (gallery || []).filter((g) => g.visible !== false).length;
+  const recent = [...(gallery || [])]
+    .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
+    .slice(0, 8);
   const livePromos = promotions.filter((p) => getPromotionStatus(p) === 'live').slice(0, 4);
   const session = getSession();
 
@@ -177,11 +179,24 @@ function Dashboard({
           </div>
           {recent.length ? (
             <div className="adm-recent-grid">
-              {recent.map((g) => (
-                <div key={g.id} className="adm-recent-item" title={g.title}>
-                  <img src={g.src} alt={g.title} />
-                </div>
-              ))}
+              {recent.map((g) => {
+                const isVideo = g.type === 'video' || g.mimeType?.startsWith('video/');
+                return (
+                  <div key={g.id} className="adm-recent-item" title={g.title}>
+                    {isVideo && !g.poster ? (
+                      <video
+                        src={g.src}
+                        muted
+                        preload="metadata"
+                        playsInline
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <img src={g.poster || g.src} alt={g.title} />
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <EmptyState

@@ -13,6 +13,14 @@ import {
   mapApiMediaItem,
   uploadMediaApi,
 } from '../services/media/mediaService';
+import { CreateContentMediaModal } from './CreateContentMediaModal';
+import { getActiveWebsiteId } from '../utils/websiteDomain';
+import {
+  deleteContentAndMediaFlow,
+  getAllWebsiteContentsAsync,
+  getWebsiteContentByIdAsync,
+  publishWebsiteContentAsync,
+} from '../services/websiteContent/websiteContentService';
 
 const DEFAULT_CATEGORIES = ['Products', 'Projects', 'Store', 'Events', 'Team', 'Videos'];
 
@@ -44,6 +52,14 @@ export function GalleryManager({
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dragOverIndex, setDragOverIndex] = useState(null);
 
+  // Content Creation Dialog queue (opens after upload or on button click)
+  const [contentModalQueue, setContentModalQueue] = useState([]);
+  const [contentModalIndex, setContentModalIndex] = useState(0);
+
+  // Edit mode: holds { mediaItem, contentData } when user clicks a card with linkedContents
+  const [editContentItem, setEditContentItem] = useState(null);
+  const [loadingContent, setLoadingContent] = useState(false);
+
   // Server media list state (GET /api/Media/List)
   const [serverMedia, setServerMedia] = useState([]);
   const [loadingServerMedia, setLoadingServerMedia] = useState(false);
@@ -51,16 +67,48 @@ export function GalleryManager({
   const uploadLock = useRef(false);
   const dragCounter = useRef(0);
 
-  const activeWebsiteId = currentWebsite?.websiteId || websites[0]?.websiteId || 1;
+  const activeWebsiteId = currentWebsite?.websiteId || websites[0]?.websiteId || getActiveWebsiteId();
 
   // Load uploaded media from real API: GET /api/Media/List?websiteId=...
   const loadServerMedia = useCallback(async (siteId) => {
     if (!siteId) return;
     setLoadingServerMedia(true);
     try {
-      const res = await getMediaListApi({ websiteId: siteId });
+      const [res, contentRes] = await Promise.all([
+        getMediaListApi({ websiteId: siteId }),
+        getAllWebsiteContentsAsync(siteId, false),
+      ]);
+
+      // The media list has no publish flag, so build contentId -> isPublished
+      // from GET /api/WebsiteContent/List and use it for the eye/hide state.
+      const publishMap = new Map();
+      const contentBody =
+        contentRes && typeof contentRes !== 'boolean' ? contentRes.data?.data : null;
+      const contentList = Array.isArray(contentBody)
+        ? contentBody
+        : Array.isArray(contentBody?.data)
+          ? contentBody.data
+          : Array.isArray(contentBody?.items)
+            ? contentBody.items
+            : [];
+      contentList.forEach((c) => {
+        const cid = Number(c?.contentId ?? c?.ContentId);
+        if (!cid) return;
+        const pub = c?.isPublished ?? c?.IsPublished;
+        if (pub !== undefined && pub !== null) {
+          publishMap.set(cid, pub === true || pub === 'true');
+        }
+      });
+
       if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
-        const mapped = res.data.map(mapApiMediaItem);
+        const mapped = res.data.map((raw) => {
+          const item = mapApiMediaItem(raw);
+          const cid = Number(item.linkedContents?.[0]?.contentId ?? item.contentId);
+          if (cid && publishMap.has(cid)) {
+            item.visible = publishMap.get(cid);
+          }
+          return item;
+        });
         setServerMedia(mapped);
       }
     } catch (err) {
@@ -129,6 +177,7 @@ export function GalleryManager({
     let ok = 0;
     const errors = [];
     const baseOrder = gallery.length;
+    const uploadedForContentModal = [];
 
     try {
       for (let i = 0; i < files.length; i += 1) {
@@ -166,6 +215,16 @@ export function GalleryManager({
             uploadedServerItem?.data?.url ||
             null;
 
+          const serverMediaId =
+            uploadedServerItem?.mediaId ||
+            uploadedServerItem?.MediaId ||
+            uploadedServerItem?.id ||
+            uploadedServerItem?.Id ||
+            uploadedServerItem?.data?.mediaId ||
+            uploadedServerItem?.data?.MediaId ||
+            uploadedServerItem?.data?.id ||
+            null;
+
           // 2. Persist media item with server URL or local data URL
           await saveGalleryItem({
             src: serverUrl || media.src,
@@ -180,8 +239,22 @@ export function GalleryManager({
             visible: true,
             order: displayOrder,
             websiteId: activeWebsiteId,
-            mediaId: uploadedServerItem?.mediaId || uploadedServerItem?.id || null,
+            mediaId: serverMediaId,
           });
+
+          uploadedForContentModal.push({
+            mediaId: serverMediaId,
+            src: serverUrl || media.src,
+            poster: media.poster || null,
+            type: media.type,
+            mimeType: media.mimeType,
+            title,
+            category,
+            caption: '',
+            order: displayOrder,
+            websiteId: activeWebsiteId,
+          });
+
           ok += 1;
         } catch (err) {
           errors.push(err.message);
@@ -196,11 +269,107 @@ export function GalleryManager({
 
     if (ok) toast(`${ok} item${ok > 1 ? 's' : ''} uploaded successfully`);
     errors.forEach((e) => toast(e, 'error'));
+
+    // Automatically open Content Creation Dialog for newly uploaded media
+    if (uploadedForContentModal.length > 0) {
+      setContentModalQueue(uploadedForContentModal);
+      setContentModalIndex(0);
+    }
+  };
+
+  // Open modal: edit mode if card has linkedContents, create mode otherwise
+  const handleMediaCardClick = async (item) => {
+    const primaryLink = item.linkedContents?.[0];
+    if (!primaryLink?.contentId) {
+      // No linked content — open create modal
+      setContentModalQueue([item]);
+      setContentModalIndex(0);
+      return;
+    }
+    // Has linked content — fetch full content data then open edit modal
+    setLoadingContent(true);
+    try {
+      const wsId = item.websiteId || activeWebsiteId;
+      const res = await getWebsiteContentByIdAsync(primaryLink.contentId, wsId);
+      if (res && typeof res !== 'boolean' && res.data?.status === 200) {
+        // Server body shape: { success, data: { contentId, ... } } OR the object directly
+        const serverBody = res.data.data;         // axios response body
+        const contentData =
+          serverBody?.contentId != null           // flat object: use as-is
+            ? serverBody
+            : serverBody?.data ?? serverBody;    // wrapped: unwrap .data
+        // Ensure we always carry the known content id so the modal updates (never creates)
+        if (contentData?.contentId == null) contentData.contentId = primaryLink.contentId;
+        console.log('[EditContent] fetched:', contentData);
+        setEditContentItem({ mediaItem: item, contentData });
+      } else {
+        // Content exists (we know its id) but the fetch failed — still open in EDIT mode
+        // so the Update API is used instead of accidentally creating new content.
+        setEditContentItem({
+          mediaItem: item,
+          contentData: {
+            contentId: primaryLink.contentId,
+            category: primaryLink.category,
+            title: primaryLink.contentTitle,
+          },
+        });
+      }
+    } catch (err) {
+      console.warn('Failed to load content for editing:', err);
+      setEditContentItem({
+        mediaItem: item,
+        contentData: {
+          contentId: primaryLink.contentId,
+          category: primaryLink.category,
+          title: primaryLink.contentTitle,
+        },
+      });
+    } finally {
+      setLoadingContent(false);
+    }
   };
 
   const toggleVisible = async (item) => {
-    await saveGalleryItem({ ...item, visible: item.visible === false });
-    toast(item.visible === false ? 'Item is now visible on the website' : 'Item hidden from the website');
+    const nextVisible = item.visible === false;
+    const contentId = item.linkedContents?.[0]?.contentId ?? item.contentId;
+
+    // Linked content → use the WebsiteContent/Publish API to show/hide on the website
+    if (contentId) {
+      const res = await publishWebsiteContentAsync(
+        contentId,
+        item.websiteId || activeWebsiteId,
+        nextVisible
+      );
+      const ok =
+        res &&
+        typeof res !== 'boolean' &&
+        (res.data?.status === 200 || res.data?.status === 204);
+
+      if (ok) {
+        toast(
+          nextVisible
+            ? 'Content is now published on the website'
+            : 'Content unpublished from the website'
+        );
+        // Reflect the new publish state on the card right away
+        const itemKey = String(item.mediaId || item.id);
+        setServerMedia((prev) =>
+          prev.map((m) =>
+            String(m.mediaId || m.id) === itemKey ? { ...m, visible: nextVisible } : m
+          )
+        );
+      } else {
+        const msg =
+          (res && typeof res !== 'boolean' && (res.data?.data?.message || res.data?.data?.title)) ||
+          'Failed to update the publish state.';
+        toast(msg, 'error');
+      }
+      return;
+    }
+
+    // No linked content — local visibility toggle only
+    await saveGalleryItem({ ...item, visible: nextVisible });
+    toast(nextVisible ? 'Item is now visible on the website' : 'Item hidden from the website');
   };
 
   const handleDelete = async (item) => {
@@ -212,9 +381,27 @@ export function GalleryManager({
       danger: true,
     });
     if (!ok) return;
+
+    // Call API delete flow if this is a server-synced media item
+    if (item.mediaId) {
+      const primaryLink = item.linkedContents?.[0];
+      const result = await deleteContentAndMediaFlow({
+        mediaId: item.mediaId,
+        contentId: primaryLink?.contentId || item.contentId,
+        contentMediaId: primaryLink?.contentMediaId || item.contentMediaId,
+        websiteId: item.websiteId || activeWebsiteId,
+      });
+      if (!result.success) {
+        toast(result.message || 'Delete failed — please try again.', 'error');
+        return;
+      }
+    }
+
+    // Remove from local store and selection
     await deleteGalleryItem(item.id);
     setSelected((s) => s.filter((id) => id !== item.id));
-    toast(`${isVideo ? 'Video' : 'Image'} deleted`);
+    loadServerMedia(activeWebsiteId);
+    toast(`${isVideo ? 'Video' : 'Image'} deleted permanently`);
   };
 
   const handleBulkDelete = async () => {
@@ -548,7 +735,13 @@ export function GalleryManager({
                   onDragOver={(e) => handleDragOverCard(e, idx)}
                   onDrop={(e) => handleDropCard(e, idx)}
                 >
-                  <div className="adm-media-thumb">
+                  {/* Clicking the image opens the Edit details dialog */}
+                  <div
+                    className="adm-media-thumb"
+                    title="Click to edit details"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => setEditing({ ...item })}
+                  >
                     {isVideo ? (
                       <div className="adm-video-wrapper">
                         <video
@@ -578,13 +771,18 @@ export function GalleryManager({
                       <div
                         className="adm-media-grip-handle"
                         title="Drag to reorder"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <AdminIcon name="grip" size={14} />
                       </div>
                     )}
 
                     {/* Select Checkbox */}
-                    <label className="adm-media-select" title="Select">
+                    <label
+                      className="adm-media-select"
+                      title="Select"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <input
                         type="checkbox"
                         checked={selected.includes(item.id)}
@@ -609,16 +807,24 @@ export function GalleryManager({
                       <button
                         type="button"
                         className="adm-icon-btn"
-                        title="Edit details"
-                        onClick={() => setEditing({ ...item })}
+                        title={item.linkedContents?.length ? 'Edit Website Content' : 'Create Website Content from this media'}
+                        style={{ color: 'var(--adm-orange)' }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMediaCardClick(item);
+                        }}
+                        disabled={loadingContent}
                       >
-                        <AdminIcon name="edit" size={16} />
+                        <AdminIcon name={item.linkedContents?.length ? 'edit' : 'plus'} size={16} />
                       </button>
                       <button
                         type="button"
                         className="adm-icon-btn"
                         title={item.visible === false ? 'Show on website' : 'Hide from website'}
-                        onClick={() => toggleVisible(item)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleVisible(item);
+                        }}
                       >
                         <AdminIcon name={item.visible === false ? 'eyeOff' : 'eye'} size={16} />
                       </button>
@@ -626,7 +832,10 @@ export function GalleryManager({
                         type="button"
                         className="adm-icon-btn is-danger"
                         title="Delete"
-                        onClick={() => handleDelete(item)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(item);
+                        }}
                       >
                         <AdminIcon name="trash" size={16} />
                       </button>
@@ -672,6 +881,10 @@ export function GalleryManager({
           item={editing}
           categories={categories}
           onClose={() => setEditing(null)}
+          onCreateContent={(mediaToCreate) => {
+            setContentModalQueue([mediaToCreate]);
+            setContentModalIndex(0);
+          }}
           onSave={async (updated) => {
             await saveGalleryItem(updated);
             setEditing(null);
@@ -680,11 +893,53 @@ export function GalleryManager({
           toast={toast}
         />
       )}
+
+      {/* Website Content Creation Modal (Flow for uploaded media) */}
+      {contentModalQueue.length > 0 && contentModalQueue[contentModalIndex] && (
+        <CreateContentMediaModal
+          mediaItem={contentModalQueue[contentModalIndex]}
+          websiteId={activeWebsiteId}
+          websites={websites}
+          categories={categories}
+          queueIndex={contentModalIndex}
+          queueTotal={contentModalQueue.length}
+          onClose={() => {
+            if (contentModalIndex + 1 < contentModalQueue.length) {
+              setContentModalIndex((idx) => idx + 1);
+            } else {
+              setContentModalQueue([]);
+              setContentModalIndex(0);
+            }
+          }}
+          onSuccess={() => {
+            loadServerMedia(activeWebsiteId);
+          }}
+          toast={toast}
+        />
+      )}
+
+      {/* Website Content Edit Modal (opens when clicking a media card with linkedContents) */}
+      {editContentItem && (
+        <CreateContentMediaModal
+          mode="edit"
+          mediaItem={editContentItem.mediaItem}
+          existingContent={editContentItem.contentData}
+          websiteId={activeWebsiteId}
+          websites={websites}
+          categories={categories}
+          onClose={() => setEditContentItem(null)}
+          onSuccess={() => {
+            setEditContentItem(null);
+            loadServerMedia(activeWebsiteId);
+          }}
+          toast={toast}
+        />
+      )}
     </div>
   );
 }
 
-function EditMediaModal({ item, categories, onClose, onSave, toast }) {
+function EditMediaModal({ item, categories, onClose, onSave, onCreateContent, toast }) {
   const [form, setForm] = useState(item);
   const [saving, setSaving] = useState(false);
   const set = (k, v) => setForm((f) => ({ ...f, [k]: v }));
@@ -719,6 +974,20 @@ function EditMediaModal({ item, categories, onClose, onSave, toast }) {
       size="lg"
       footer={
         <>
+          {onCreateContent && (
+            <button
+              type="button"
+              className="adm-btn adm-btn--light"
+              style={{ marginRight: 'auto', display: 'flex', alignItems: 'center', gap: 6 }}
+              onClick={() => {
+                onClose();
+                onCreateContent(form);
+              }}
+            >
+              <AdminIcon name="fileText" size={14} />
+              <span>Create Website Content</span>
+            </button>
+          )}
           <button type="button" className="adm-btn adm-btn--ghost" onClick={onClose}>
             Cancel
           </button>

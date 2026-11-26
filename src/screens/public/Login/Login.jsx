@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { verifyUser } from '../../../services/user/user';
-import { setTokens } from '../../../utils/authToken';
 import '../../../styles/admin.css';
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -14,14 +13,13 @@ export function Login({
 }) {
   const [userName, setUserName] = useState('');
   const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    document.title = `${screenTitle} | Portal`;
-  }, [screenTitle]);
+    document.title = `${screenTitle} | ${brandName}`;
+  }, [screenTitle, brandName]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,20 +32,30 @@ export function Login({
         userName,
         password,
         company: brandName,
-        remember,
       });
 
-      if (response && (response.status === 200 || response.status === 201)) {
+      const body = response?.data || {};
+      const httpOk = response?.status === 200 || response?.status === 201;
+      // The API replies HTTP 200 with { success: false, message: "..." } for bad credentials
+      const apiRejected = body.success === false || body.isSuccess === false;
+
+      if (httpOk && !apiRejected) {
         setLoading(false);
         onNavigate(redirectPath);
         return;
       }
 
       const serverMsg =
-        response?.data?.message ||
-        response?.data?.title ||
-        response?.data?.error ||
-        (response?.status === 405 ? '405 Method Not Allowed - check proxy or CORS' : 'Invalid username or password');
+        body.message ||
+        body.title ||
+        body.error ||
+        (response?.status === 401
+          ? 'Invalid username or password.'
+          : response?.status === 405
+            ? '405 Method Not Allowed - check proxy or CORS'
+            : response?.status === 400
+              ? 'Invalid username or password.'
+              : 'Login failed. Invalid username or password.');
 
       setError(serverMsg);
       setLoading(false);
@@ -56,21 +64,6 @@ export function Login({
       setError(err.message || 'Login failed');
       setLoading(false);
     }
-  };
-
-  const handleTestBypass = () => {
-    // Set mock tokens so Private container allows access
-    setTokens({
-      accessToken: `mock_access_${Date.now()}`,
-      accessTokenExpiry: new Date(Date.now() + 3600 * 1000).toISOString(),
-      refreshToken: `mock_refresh_${Date.now()}`,
-      refreshTokenExpiry: new Date(Date.now() + 7 * 86400 * 1000).toISOString(),
-      userName: userName || 'preview',
-      company: brandName,
-      isSuperAdmin: false,
-      remember: false,
-    });
-    onNavigate(redirectPath);
   };
 
   return (
@@ -83,7 +76,7 @@ export function Login({
         <button type="button" className="adm-login-logo" onClick={() => onNavigate('/')}>
           <span className="adm-logo-mark">{logoTag}</span>
           <span className="adm-logo-text">
-            {brandName}<span>Portal</span>
+            {brandName}
           </span>
         </button>
 
@@ -110,7 +103,7 @@ export function Login({
           </ul>
         </div>
 
-        <p className="adm-login-brand-foot">© {CURRENT_YEAR} {brandName} Portal. All rights reserved.</p>
+        <p className="adm-login-brand-foot">© {CURRENT_YEAR} {brandName}. All rights reserved.</p>
       </aside>
 
       {/* Right form panel */}
@@ -121,20 +114,6 @@ export function Login({
             <h2>{screenTitle}</h2>
             <p>Sign in to your {brandName.toLowerCase()} administration panel</p>
           </div>
-
-          {error && (
-            <div className="adm-alert adm-alert--error" role="alert">
-              <div>{error}</div>
-              <button
-                type="button"
-                className="adm-link"
-                style={{ marginTop: 6, fontSize: '0.8rem', color: '#b91c1c', textDecoration: 'underline' }}
-                onClick={handleTestBypass}
-              >
-                Or enter in preview / demo mode →
-              </button>
-            </div>
-          )}
 
           <label className="adm-field">
             <span className="adm-label">Username</span>
@@ -175,11 +154,6 @@ export function Login({
             </div>
           </label>
 
-          <label className="adm-check">
-            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-            <span>Keep me signed in for 7 days</span>
-          </label>
-
           <button type="submit" className="adm-btn adm-btn--primary adm-btn--block" disabled={loading}>
             {loading ? (
               <>
@@ -195,6 +169,41 @@ export function Login({
           </button>
         </form>
       </main>
+
+      {/* Login failure dialog */}
+      {error && (
+        <div className="adm-modal-backdrop" onClick={() => setError('')}>
+          <div
+            className="adm-modal adm-modal--sm"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="adm-login-error-title"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="adm-modal-head">
+              <div>
+                <h3 id="adm-login-error-title">Login Failed</h3>
+                <p>We couldn’t sign you in.</p>
+              </div>
+            </div>
+            <div className="adm-modal-body">
+              <div className="adm-alert adm-alert--error" role="alert" style={{ margin: 0 }}>
+                {error}
+              </div>
+            </div>
+            <div className="adm-modal-foot">
+              <button
+                type="button"
+                className="adm-btn adm-btn--primary"
+                onClick={() => setError('')}
+                autoFocus
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

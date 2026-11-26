@@ -136,8 +136,8 @@ export function AppRoutes() {
         <Login
           onNavigate={navigate}
           screenTitle="Admin Login"
-          brandName="Admin"
-          logoTag="AF"
+          brandName="CrystalTechnosoft"
+          logoTag="CT"
           redirectPath={RouterPath.Admin}
         />
       </Public>
