@@ -6,6 +6,15 @@ import { getActiveWebsiteId } from '../utils/websiteDomain';
 
 const CURRENCIES = ['ZAR', 'USD', 'EUR', 'GBP'];
 const CONTENT_TYPES = ['Product', 'Service', 'Project', 'Promotion', 'Gallery', 'Testimonial', 'Page'];
+const DEFAULT_CATEGORY_OPTIONS = [
+  'Curtains',
+  'Kitchen',
+  'Studio',
+  'Video',
+  'Videos',
+  'Bedroom Curtain',
+  'Dining Room',
+];
 
 // Backend may return customFields as an object; the textarea needs a string.
 const toCustomFieldsString = (cf) => {
@@ -56,6 +65,9 @@ export function CreateContentMediaModal({
   // Form State — pre-filled from ec when mode === 'edit'
   const [title, setTitle] = useState(ec?.title || mediaItem?.title || '');
   const [category, setCategory] = useState(ec?.category || mediaItem?.category || 'Products');
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [categorySearching, setCategorySearching] = useState(false);
+  const [activeCategoryIndex, setActiveCategoryIndex] = useState(-1);
   const [contentType, setContentType] = useState(ec?.contentType || mediaItem?.contentType || 'Product');
   const [shortDescription, setShortDescription] = useState(ec?.shortDescription || '');
   const [description, setDescription] = useState(ec?.description || mediaItem?.caption || '');
@@ -97,6 +109,17 @@ export function CreateContentMediaModal({
   // Submission state
   const [saving, setSaving] = useState(false);
   const [statusMessage, setStatusMessage] = useState('');
+
+  const categoryOptions = Array.from(
+    new Map(
+      [...DEFAULT_CATEGORY_OPTIONS, ...(Array.isArray(categories) ? categories : [])]
+        .filter((option) => typeof option === 'string' && option.trim())
+        .map((option) => [option.trim().toLowerCase(), option.trim()])
+    ).values()
+  );
+  const filteredCategoryOptions = categoryOptions.filter((option) =>
+    !categorySearching || option.toLowerCase().includes(category.trim().toLowerCase())
+  );
 
   const handleSubmit = async (e) => {
     if (e) e.preventDefault();
@@ -389,6 +412,32 @@ export function CreateContentMediaModal({
               </label>
             </div>
           </div>
+
+          {/* Publish Toggle Box — placed in left column blank space */}
+          <div
+            className={`adm-publish-toggle-box ${isPublished ? 'is-active' : ''}`}
+            style={{
+              marginTop: 14,
+              padding: '14px 16px',
+              borderRadius: 12,
+              background: isPublished ? 'rgba(16, 185, 129, 0.08)' : '#f8fafc',
+              border: isPublished ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid #e2e8f0',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: '0.9rem', color: isPublished ? '#065f46' : '#1e293b' }}>
+                  <AdminIcon name={isPublished ? 'send' : 'fileText'} size={16} />
+                  <span>Publish Immediately to Website</span>
+                </div>
+              </div>
+              <Switch
+                checked={isPublished}
+                onChange={setIsPublished}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Right Column: Website Content Form (WebsiteContent/Create) */}
@@ -429,18 +478,113 @@ export function CreateContentMediaModal({
 
               <label className="adm-field">
                 <span className="adm-label">Category</span>
-                <input
-                  className="adm-input"
-                  list="adm-content-cat-list"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="e.g. Products, Curtains"
-                />
-                <datalist id="adm-content-cat-list">
-                  {categories.map((c) => (
-                    <option key={c} value={c} />
-                  ))}
-                </datalist>
+                <div
+                  className="adm-category-combobox"
+                  onBlur={(e) => {
+                    if (!e.currentTarget.contains(e.relatedTarget)) setCategoryOpen(false);
+                  }}
+                >
+                  <input
+                    className="adm-input"
+                    role="combobox"
+                    aria-autocomplete="list"
+                    aria-expanded={categoryOpen}
+                    aria-controls="adm-content-cat-list"
+                    aria-activedescendant={
+                      categoryOpen && activeCategoryIndex >= 0
+                        ? `adm-content-cat-option-${activeCategoryIndex}`
+                        : undefined
+                    }
+                    value={category}
+                    onFocus={() => {
+                      setCategorySearching(false);
+                      setCategoryOpen(true);
+                    }}
+                    onChange={(e) => {
+                      setCategory(e.target.value);
+                      setCategorySearching(true);
+                      setActiveCategoryIndex(-1);
+                      setCategoryOpen(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setCategoryOpen(true);
+                        setActiveCategoryIndex((index) =>
+                          Math.min(index + 1, filteredCategoryOptions.length - 1)
+                        );
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setCategoryOpen(true);
+                        setActiveCategoryIndex((index) =>
+                          index <= 0 ? filteredCategoryOptions.length - 1 : index - 1
+                        );
+                      } else if (e.key === 'Enter' && categoryOpen) {
+                        e.preventDefault();
+                        const exactMatch = filteredCategoryOptions.find(
+                          (option) => option.toLowerCase() === category.trim().toLowerCase()
+                        );
+                        const selected =
+                          (activeCategoryIndex >= 0 &&
+                            filteredCategoryOptions[activeCategoryIndex]) ||
+                          exactMatch;
+                        if (selected) setCategory(selected);
+                        setCategoryOpen(false);
+                      } else if (e.key === 'Escape') {
+                        setCategoryOpen(false);
+                        setActiveCategoryIndex(-1);
+                      }
+                    }}
+                    placeholder="Choose or type a category"
+                  />
+                  <button
+                    type="button"
+                    className={`adm-category-dropdown-toggle${categoryOpen ? ' is-open' : ''}`}
+                    aria-label={categoryOpen ? 'Hide category options' : 'Show category options'}
+                    aria-expanded={categoryOpen}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      if (!categoryOpen) setCategorySearching(false);
+                      setCategoryOpen(!categoryOpen);
+                    }}
+                  >
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+                      strokeLinejoin="round" aria-hidden="true">
+                      <path d="m6 9 6 6 6-6" />
+                    </svg>
+                  </button>
+                  {categoryOpen && (
+                    <div className="adm-category-dropdown" id="adm-content-cat-list" role="listbox">
+                      {filteredCategoryOptions.map((option, index) => (
+                        <div
+                          key={option}
+                          id={`adm-content-cat-option-${index}`}
+                          className={`adm-category-option${index === activeCategoryIndex ? ' is-active' : ''}`}
+                          role="option"
+                          aria-selected={option.toLowerCase() === category.trim().toLowerCase()}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setCategory(option);
+                            setCategoryOpen(false);
+                            setActiveCategoryIndex(-1);
+                          }}
+                        >
+                          {option}
+                        </div>
+                      ))}
+                      {categorySearching &&
+                        category.trim() &&
+                        !categoryOptions.some(
+                          (option) => option.toLowerCase() === category.trim().toLowerCase()
+                        ) && (
+                          <div className="adm-category-custom" aria-live="polite">
+                            &quot;{category.trim()}&quot; will be added as a new category
+                          </div>
+                        )}
+                    </div>
+                  )}
+                </div>
               </label>
             </div>
 
@@ -540,37 +684,6 @@ export function CreateContentMediaModal({
                 style={{ fontSize: '0.8rem', fontFamily: 'monospace' }}
               />
             </label>
-
-            {/* Prominent Publish Toggle Box */}
-            <div
-              className={`adm-publish-toggle-box ${isPublished ? 'is-active' : ''}`}
-              style={{
-                marginTop: 10,
-                padding: '14px 16px',
-                borderRadius: 12,
-                background: isPublished ? 'rgba(16, 185, 129, 0.08)' : '#f8fafc',
-                border: isPublished ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid #e2e8f0',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 700, fontSize: '0.9rem', color: isPublished ? '#065f46' : '#1e293b' }}>
-                    <AdminIcon name={isPublished ? 'send' : 'fileText'} size={16} />
-                    <span>Publish Immediately to Website</span>
-                  </div>
-                  <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: isPublished ? '#047857' : '#64748b', lineHeight: 1.4 }}>
-                    {isPublished
-                      ? 'Will call /api/WebsiteContent/Publish/{id}?isPublished=true to make this content live immediately.'
-                      : 'Saved as draft only. Backend publish API will NOT be called.'}
-                  </p>
-                </div>
-                <Switch
-                  checked={isPublished}
-                  onChange={setIsPublished}
-                />
-              </div>
-            </div>
           </div>
         </div>
       </div>

@@ -400,7 +400,9 @@ export function GalleryManager({
     // Remove from local store and selection
     await deleteGalleryItem(item.id);
     setSelected((s) => s.filter((id) => id !== item.id));
-    loadServerMedia(activeWebsiteId);
+    // Immediately drop it from the rendered list (don't wait on a re-fetch)
+    const removedKey = String(item.mediaId || item.id);
+    setServerMedia((list) => list.filter((m) => String(m.mediaId || m.id) !== removedKey));
     toast(`${isVideo ? 'Video' : 'Image'} deleted permanently`);
   };
 
@@ -413,6 +415,9 @@ export function GalleryManager({
     });
     if (!ok) return;
     await Promise.all(selected.map((id) => deleteGalleryItem(id)));
+    // Immediately drop the selected items from the rendered list
+    const selectedKeys = new Set(selected.map(String));
+    setServerMedia((list) => list.filter((m) => !selectedKeys.has(String(m.mediaId || m.id))));
     toast(`${selected.length} items deleted`);
     setSelected([]);
   };

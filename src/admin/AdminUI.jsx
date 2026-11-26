@@ -91,7 +91,7 @@ export function Modal({ title, subtitle, onClose, children, footer, size = 'md' 
   }, [onClose]);
 
   return (
-    <div className="adm-modal-backdrop" onMouseDown={onClose}>
+    <div className="adm-modal-backdrop">
       <div className={`adm-modal adm-modal--${size}`} onMouseDown={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <header className="adm-modal-head">
           <div>

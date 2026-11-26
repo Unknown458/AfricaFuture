@@ -295,8 +295,13 @@ export const deleteWebsiteContentMediaAsync = async (
   if (authResponse && tokens) {
     try {
       const response = await axios.delete(
-        `${getBaseUrl()}${Api.DeleteWebsiteContentMedia}?contentMediaId=${contentMediaId}&contentId=${contentId}&websiteId=${websiteId}`,
+        `${getBaseUrl()}${Api.DeleteWebsiteContentMedia}`,
         {
+          params: {
+            contentMediaId,
+            contentId,
+            websiteId,
+          },
           headers: {
             Authorization: `Bearer ${tokens.accessToken}`,
           },
@@ -317,7 +322,7 @@ export const deleteWebsiteContentMediaAsync = async (
 
 // -------------------------------------------------------------------------------------------
 // 8. Delete Media Permanently
-// API: DELETE /api/Media/DeletePermanently?mediaId={mediaId}&websiteId={websiteId}
+// API: DELETE /api/Media/DeletePermanently/{mediaId}?websiteId={websiteId}
 // -------------------------------------------------------------------------------------------
 export const deletePermanentlyMediaAsync = async (
   mediaId: number,
@@ -329,7 +334,7 @@ export const deletePermanentlyMediaAsync = async (
   if (authResponse && tokens) {
     try {
       const response = await axios.delete(
-        `${getBaseUrl()}${Api.DeletePermanentlyMedia}?mediaId=${mediaId}&websiteId=${websiteId}`,
+        `${getBaseUrl()}${Api.DeletePermanentlyMedia}/${mediaId}?websiteId=${websiteId}`,
         {
           headers: {
             Authorization: `Bearer ${tokens.accessToken}`,
@@ -562,8 +567,8 @@ export const saveContentWithMediaFlow = async ({
 
 // -------------------------------------------------------------------------------------------
 // 11. Composite Delete Flow
-// Step A: DELETE /api/Media/DeletePermanently (permanently delete the media)
-// Step B: If contentMediaId exists: DELETE /api/WebsiteContentMedia/Remove (remove content-media link)
+// Step A: If contentMediaId exists: DELETE /api/WebsiteContentMedia/Remove (remove content-media link)
+// Step B: DELETE /api/Media/DeletePermanently/{mediaId}?websiteId={websiteId} (permanently delete the media)
 // -------------------------------------------------------------------------------------------
 export const deleteContentAndMediaFlow = async ({
   mediaId,
@@ -582,7 +587,23 @@ export const deleteContentAndMediaFlow = async ({
   let mediaLinkDeleteSuccess = false;
   let mediaDeleteSuccess = false;
 
-  // Step A: Delete media permanently
+  // Step A: Delete website content media connection if exists
+  if (contentMediaId && contentMediaId > 0 && contentId && contentId > 0) {
+    try {
+      const linkRes = await deleteWebsiteContentMediaAsync(
+        contentMediaId,
+        contentId,
+        dynamicWebsiteId
+      );
+      if (linkRes && typeof linkRes !== 'boolean' && (linkRes.data.status === 200 || linkRes.data.status === 204)) {
+        mediaLinkDeleteSuccess = true;
+      }
+    } catch (err) {
+      console.warn('Notice: removing content-media link failed:', err);
+    }
+  }
+
+  // Step B: Delete media permanently
   if (mediaId && mediaId > 0) {
     try {
       const permRes = await deletePermanentlyMediaAsync(mediaId, dynamicWebsiteId);
@@ -606,22 +627,6 @@ export const deleteContentAndMediaFlow = async ({
         mediaLinkDeleteSuccess,
         mediaDeleteSuccess: false,
       };
-    }
-  }
-
-  // Step B: Delete website content media connection if exists
-  if (contentMediaId && contentMediaId > 0 && contentId && contentId > 0) {
-    try {
-      const linkRes = await deleteWebsiteContentMediaAsync(
-        contentMediaId,
-        contentId,
-        dynamicWebsiteId
-      );
-      if (linkRes && typeof linkRes !== 'boolean' && (linkRes.data.status === 200 || linkRes.data.status === 204)) {
-        mediaLinkDeleteSuccess = true;
-      }
-    } catch (err) {
-      console.warn('Notice: removing content-media link failed:', err);
     }
   }
 
