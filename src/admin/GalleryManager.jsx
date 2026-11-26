@@ -123,16 +123,8 @@ export function GalleryManager({
   }, [activeWebsiteId, loadServerMedia]);
 
   // Combined gallery items (Server items + any local drafts)
-  const allMediaItems = useMemo(() => {
-    if (!serverMedia || serverMedia.length === 0) {
-      return gallery;
-    }
-    const serverIds = new Set(serverMedia.map((m) => String(m.mediaId || m.id)));
-    const localOnly = gallery.filter(
-      (g) => !g.mediaId || !serverIds.has(String(g.mediaId))
-    );
-    return [...serverMedia, ...localOnly];
-  }, [serverMedia, gallery]);
+  // Show ONLY real-time data coming from the API (GET /api/Media/List).
+  const allMediaItems = useMemo(() => serverMedia, [serverMedia]);
 
   const categories = useMemo(
     () => [...new Set([...DEFAULT_CATEGORIES, ...allMediaItems.map((g) => g.category).filter(Boolean)])],
@@ -188,25 +180,20 @@ export function GalleryManager({
           const category = isVideo && uploadCategory === 'Products' ? 'Videos' : uploadCategory;
           const displayOrder = baseOrder + i;
 
-          // 1. Upload to backend API: POST /api/Media/Upload using multipart/form-data
-          let uploadedServerItem = null;
-          try {
-            const apiRes = await uploadMediaApi({
-              file: files[i],
-              mediaDetails: `${title} (${category})`,
-              displayOrder,
-              websiteId: activeWebsiteId,
-            });
+          // Upload to backend API: POST /api/Media/Upload (multipart/form-data).
+          // Nothing is cached locally — the library shows only server data.
+          const apiRes = await uploadMediaApi({
+            file: files[i],
+            mediaDetails: `${title} (${category})`,
+            displayOrder,
+            websiteId: activeWebsiteId,
+          });
 
-            if (apiRes?.success) {
-              uploadedServerItem = apiRes.data;
-            } else if (apiRes?.message) {
-              console.warn('Media upload API notice:', apiRes.message);
-            }
-          } catch (apiErr) {
-            console.warn('Media upload API call failed, saving to local store:', apiErr);
+          if (!apiRes?.success) {
+            throw new Error(apiRes?.message || `Failed to upload ${files[i].name}`);
           }
 
+          const uploadedServerItem = apiRes.data;
           const serverUrl =
             uploadedServerItem?.fileUrl ||
             uploadedServerItem?.url ||
@@ -224,23 +211,6 @@ export function GalleryManager({
             uploadedServerItem?.data?.MediaId ||
             uploadedServerItem?.data?.id ||
             null;
-
-          // 2. Persist media item with server URL or local data URL
-          await saveGalleryItem({
-            src: serverUrl || media.src,
-            localSrc: media.src,
-            poster: media.poster || null,
-            type: media.type, // 'image' or 'video'
-            mimeType: media.mimeType,
-            duration: media.duration || null,
-            title,
-            caption: '',
-            category,
-            visible: true,
-            order: displayOrder,
-            websiteId: activeWebsiteId,
-            mediaId: serverMediaId,
-          });
 
           uploadedForContentModal.push({
             mediaId: serverMediaId,
@@ -687,7 +657,7 @@ export function GalleryManager({
           </div>
         </div>
 
-        {filter === 'All' && !search && mediaTypeFilter === 'all' && gallery.length > 1 && (
+        {filter === 'All' && !search && mediaTypeFilter === 'all' && allMediaItems.length > 1 && (
           <div
             className="adm-alert"
             style={{
@@ -711,9 +681,9 @@ export function GalleryManager({
         {filtered.length === 0 ? (
           <EmptyState
             icon="gallery"
-            title={gallery.length ? 'No media matches your search' : 'Your gallery is empty'}
+            title={allMediaItems.length ? 'No media matches your search' : 'Your gallery is empty'}
             text={
-              gallery.length
+              allMediaItems.length
                 ? 'Try a different search or filter.'
                 : 'Upload images or videos above, or drag and drop files anywhere on this page.'
             }

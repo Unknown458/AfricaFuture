@@ -78,16 +78,8 @@ function AdminPanel({ onNavigate, tenant = 'Admin', loginPath = '/login' }) {
     };
   }, [activeWebsiteId, tab]);
 
-  const combinedGallery = useMemo(() => {
-    if (!serverMediaList || serverMediaList.length === 0) {
-      return content.gallery;
-    }
-    const serverIds = new Set(serverMediaList.map((m) => String(m.mediaId || m.id)));
-    const localOnly = content.gallery.filter(
-      (g) => !g.mediaId || !serverIds.has(String(g.mediaId))
-    );
-    return [...serverMediaList, ...localOnly];
-  }, [serverMediaList, content.gallery]);
+  // Show ONLY real-time data coming from the API (GET /api/Media/List).
+  const combinedGallery = useMemo(() => serverMediaList, [serverMediaList]);
 
   // Load all websites if SuperAdmin
   useEffect(() => {
